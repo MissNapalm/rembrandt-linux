@@ -95,22 +95,7 @@ const CTF = {
   switchLab(labId) {
     if (!this._labs[labId]) return;
     this._lab = labId;
-    // Reset SIM state for the new lab
-    SIM.windowsShell = false;
-    SIM.hashesOnDisk = false;
-    SIM.lootExfiltrated = false;
-    SIM.msfActive = false;
-    SIM.msfModule = null;
-    SIM.msfOptions = {};
-    SIM.meterpreter = false;
-    SIM.ebTarget = '10.10.10.10';
-    SIM.user = 'rembrandt';
-    SIM.cwd  = '/home/rembrandt';
-    TERM_INSTANCES.forEach(t => {
-      t._user = 'rembrandt';
-      t._cwd  = '/home/rembrandt';
-      t._updatePrompt();
-    });
+    this._resetLabState();
     this._loadState();
     this._renderSidebar();
   },
@@ -130,21 +115,37 @@ const CTF = {
   reset() {
     this.challenges.forEach(c => c.done = false);
     localStorage.removeItem('ctf_state_' + this._lab);
-    SIM.hashesOnDisk = false;
-    SIM.windowsShell = false;
-    SIM.lootExfiltrated = false;
-    SIM.msfActive = false;
-    SIM.msfModule = null;
-    SIM.msfOptions = {};
-    SIM.meterpreter = false;
-    SIM.user = 'rembrandt';
-    SIM.cwd  = '/home/rembrandt';
-    TERM_INSTANCES.forEach(t => {
-      t._user = 'rembrandt';
-      t._cwd  = '/home/rembrandt';
-      t._updatePrompt();
-    });
+    this._resetLabState();
     this._renderSidebar();
+  },
+
+  // Shared lab-state reset. Touches only flags actually defined in SIM.
+  _resetLabState() {
+    SIM.windowsShell = false;
+    SIM.hashesOnDisk = false;
+    SIM.lootExfiltrated = false;
+    SIM.msf = false;
+    SIM.msfModule = null;
+    SIM.msfOpts = {};
+    SIM.msfSessions = [];
+    SIM.msfMeter = false;
+    SIM.msfMeterId = null;
+    SIM.msfMeterWin = false;
+    SIM.msfLastSearch = [];
+    SIM.legacyPwned = false;
+    SIM.kiwiLoaded = false;
+    SIM.lsassDumped = false;
+    SIM.persistenceInstalled = false;
+    SIM.isRoot = false;
+    const home = '/home/' + SIM.user;
+    SIM.cwd = home;
+    TERM_INSTANCES.forEach(t => {
+      t._cwd = home;
+      t._isRoot = false;
+      t._windowsShell = false;
+      t._winCwd = 'C:\\Windows\\system32';
+      t._updatePrompt && t._updatePrompt();
+    });
   },
 
   // ── Sidebar UI ─────────────────────────────────────────────────────────────

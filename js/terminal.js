@@ -1063,22 +1063,7 @@ function createTerminal() {
         return;
       }
 
-      if (result.loadTime) {
-        if (result.progressOnEnter && result.lines && result.lines.length > 0) {
-          const firstLine = result.lines[0];
-          const t = typeof firstLine.t === 'function' ? firstLine.t() : firstLine.t;
-          if (t) this._writeLine(t, firstLine.cls || '');
-          result._firstLinePrinted = true;
-        }
-        this._busy = true;
-        const cancelled = await this._animateLoad(result.loadTime, result.progressFn, result.progressOnEnter);
-        this._busy = false;
-        if (cancelled) { this._writePrompt(); return; }
-      }
-      if (result.lines) {
-        const lines = result._firstLinePrinted ? result.lines.slice(1) : result.lines;
-        this._printLines(lines);
-      }
+      if (result.lines) this._printLines(result.lines);
       this._writePrompt();
       if (result.id) {
         const captured = CTF.check(result);

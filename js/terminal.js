@@ -1130,43 +1130,36 @@ function createTerminal() {
     // ── Live display (top/htop/watch) ───────────────────────────────────────
     _animateLive(displayFn, maxMs, refreshMs) {
       return new Promise(resolve => {
-        let prevLineCount = 0;
         let tick = 0;
 
         const render = () => {
-          // Erase previous frame
-          if (prevLineCount > 0) {
-            this._xterm.write('\x1b[' + prevLineCount + 'A\x1b[J');
-          }
-          const maxRows = (this._xterm.rows || 24) - 2; // leave room for prompt
+          const rows = this._xterm.rows || 24;
           const allLines = displayFn(tick++);
-          const lines = allLines.slice(0, maxRows);
-          prevLineCount = 0;
+          const lines = allLines.slice(0, rows);
+          // Home cursor, clear entire screen, then render from the top
+          let frame = '\x1b[H\x1b[2J';
           for (const l of lines) {
             const text = String(l.t ?? '');
-            const subLines = text.split('\n');
-            prevLineCount += subLines.length;
             const color = this._clsColor(l.cls);
+            const subLines = text.split('\n');
             for (const sub of subLines) {
-              if (color) this._xterm.writeln(color + sub + '\x1b[0m');
-              else this._xterm.writeln(sub);
+              frame += (color ? color + sub + '\x1b[0m' : sub) + '\r\n';
             }
           }
+          this._xterm.write(frame);
         };
 
+        // Enter alternate screen buffer (saves the shell's view), hide cursor
+        this._xterm.write('\x1b[?1049h\x1b[?25l');
         render();
         const iv = setInterval(render, refreshMs);
-        this._xterm.write('\x1b[?25l'); // hide cursor during live display
 
         const finish = (cancelled) => {
           clearInterval(iv);
           this._loadCancel = null;
-          // Clear the live frame before returning to shell
-          if (prevLineCount > 0) {
-            this._xterm.write('\x1b[' + prevLineCount + 'A\x1b[J');
-          }
+          // Leave alternate screen buffer (restores prior shell view), show cursor
+          this._xterm.write('\x1b[?25h\x1b[?1049l');
           if (cancelled) this._xterm.writeln('\x1b[90m^C\x1b[0m');
-          this._xterm.write('\x1b[?25h'); // restore cursor
           resolve(cancelled);
         };
 

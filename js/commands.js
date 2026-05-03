@@ -2882,7 +2882,7 @@ const HANDLERS = [
   {
     id: 'nmap-eb-discovery',
     loadTime: () => jitter(2800, 500),
-    match: c => /^nmap\b/.test(c) && (c.includes('10.10.20') || c.includes('20.0/24')) && !c.includes('smb-vuln'),
+    match: c => /^nmap\b/.test(c) && (c.includes('20.0/24') || (c.includes('10.10.20') && c.includes('-sn'))),
     lines: [
       { t: 'Starting Nmap 7.94 ( https://nmap.org )' },
       { t: '' },
@@ -2918,7 +2918,7 @@ const HANDLERS = [
         { t: `SYN Stealth Scan Timing: About ${pct}% done; ETC: ${etcStr} (0:${String(remM).padStart(2,'0')}:${String(remS2).padStart(2,'0')} remaining)`, cls: 'd' },
       ];
     },
-    match: c => /^nmap\b/.test(c) && c.includes('smb-vuln') && c.includes('10.10.20.10'),
+    match: c => /^nmap\b/.test(c) && c.includes('10.10.20.10') && (c.includes('-sV') || c.includes('--script')),
     lines: [
       { t: () => 'Starting Nmap 7.94 ( https://nmap.org ) at ' + new Date().toUTCString().slice(0,16) },
       { t: 'Nmap scan report for WIN7-PC (10.10.20.10)' },
@@ -3556,6 +3556,13 @@ function runCommand(rawInput) {
 
   // ── Meterpreter shell mode ────────────────────────────────────────────────
   if (SIM.msf && SIM.msfMeter && !SIM.msfMeterWin) {
+    // exit/quit in meterpreter only closes the session, returns to msf prompt
+    if (cmd === 'exit' || cmd === 'quit') {
+      SIM.msfMeter = false;
+      SIM.msfMeterId = null;
+      SIM.msfSessions = [];
+      return { openMsf: true, msfEcho: '[*] Shutting down Meterpreter...\n\n[*] 10.10.20.5 - Meterpreter session 1 closed.  Reason: User exit' };
+    }
     // Valid meterpreter built-in commands
     if (cmd === 'whoami' || cmd === 'getuid') {
       return { openMsf: true, msfEcho: 'Server username: NT AUTHORITY\\SYSTEM' };
@@ -3714,12 +3721,10 @@ function runCommand(rawInput) {
     }
   }
 
-  // Unknown command
+  // Unknown command — friendly hint that points at the lab objectives
   const tool = cmd.split(' ')[0];
-  const knownTools = ['nmap','enum4linux','crackmapexec','cme','impacket','john','hashcat',
-    'hydra','kerbrute','gobuster','rpcclient','smbclient','metasploit','msfconsole','wpscan','nikto'];
-  if (knownTools.some(t => tool.includes(t))) {
-    return { lines: [{ t: `${tool}: unrecognized options or target. Check syntax — type  help  for the CTF steps.`, cls: 'r' }] };
-  }
-  return { lines: [{ t: `bash: ${tool}: command not found`, cls: 'r' }] };
+  return { lines: [
+    { t: `[sim] That \`${tool}\` invocation isn't wired up in this lab.`, cls: 'y' },
+    { t: `       Check the objectives panel on the right — each step shows the exact command to run.`, cls: 'd' },
+  ] };
 }

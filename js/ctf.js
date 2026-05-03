@@ -95,23 +95,15 @@ const KERBEROAST_CHALLENGES = [
 // ── EternalBlue challenges ────────────────────────────────────────────────────
 const ETERNALBLUE_CHALLENGES = [
   {
-    id: 1, title: 'Discover the Target', pts: 100,
-    flag: 'FLAG{win7_host_discovered_10_10_20_10}',
-    hint: 'sudo nmap -sn 10.10.20.0/24',
-    explain: 'Every attack starts with reconnaissance — figuring out what\'s on the network before you try anything.\n\nA "ping sweep" sends a small packet to every possible address in a network range and listens for replies. Any machine that replies is alive and worth investigating. The -sn flag tells nmap to only do this discovery step and not scan ports yet.\n\nThe range 10.10.20.0/24 means "check all 256 addresses from 10.10.20.0 to 10.10.20.255." We find a Windows 7 machine at 10.10.20.10.\n\nWindows 7 reached end-of-life in January 2020, meaning Microsoft stopped releasing security patches for it. Any vulnerability discovered after that date will never be fixed. Machines like this are extremely common in real corporate networks — they\'re expensive to upgrade and often running critical software that can\'t be moved.',
-    done: false,
-    check: r => r.id === 'nmap-eb-discovery',
-  },
-  {
-    id: 2, title: 'Identify Vulnerability', pts: 150,
+    id: 1, title: 'Service & Script Scan', pts: 150,
     flag: 'FLAG{ms17_010_eternalblue_confirmed}',
-    hint: 'sudo nmap -sV --script smb-vuln-ms17-010 10.10.20.10',
-    explain: 'MS17-010 is one of the most famous vulnerabilities in history. Here\'s the story:\n\nThe NSA discovered a critical flaw in Windows\'s file-sharing protocol (SMB) and secretly developed an exploit for it called EternalBlue. They used it for years for intelligence gathering. In 2017, a hacker group called Shadow Brokers stole and published the NSA\'s hacking tools online — including EternalBlue.\n\nWithin weeks, criminal groups weaponised it. The WannaCry ransomware used EternalBlue to infect 230,000 computers in 150 countries in a single day, including the UK\'s National Health Service. The NotPetya attack caused $10 billion in damage worldwide.\n\nThe vulnerability allows an attacker to run any code they want on a target machine with no username, no password, and no interaction from the victim. The nmap script checks if the target is unpatched. A VULNERABLE result means we can get in.',
+    hint: 'sudo nmap -sV -sC 10.10.20.10',
+    explain: 'Every attack starts with reconnaissance. We already know there\'s a Windows 7 machine at 10.10.20.10 — now we point nmap at it directly to learn what it\'s running.\n\nThe -sV flag tells nmap to figure out the version of every service it finds — not just "port 445 is open" but "port 445 is microsoft-ds running on Windows 7 Ultimate 7601 SP1." Versions matter because vulnerabilities are tied to specific versions.\n\nThe -sC flag runs nmap\'s default script category. These are safe NSE scripts that probe each open service for common information and well-known weaknesses. For SMB that includes smb-security-mode, smb2-time, and crucially smb-vuln-ms17-010 — the check for EternalBlue.\n\nMS17-010 is one of the most famous vulnerabilities in history. The NSA discovered a critical flaw in Windows\'s SMB protocol and built an exploit called EternalBlue. In 2017 the Shadow Brokers leaked it publicly, and within weeks WannaCry ransomware used it to infect 230,000 machines in 150 countries — including the UK NHS. NotPetya followed and caused $10 billion in damage.\n\nWindows 7 reached end-of-life in January 2020. Any vulnerability found after that date will never be patched — machines like this are extremely common in real corporate networks because they\'re expensive to upgrade and often run critical software that can\'t be moved.\n\nThe scan output reports State: VULNERABLE. That\'s the green light to load the exploit.',
     done: false,
     check: r => r.id === 'nmap-eb-vuln',
   },
   {
-    id: 3, title: 'Launch Metasploit', pts: 100,
+    id: 2, title: 'Launch Metasploit', pts: 100,
     flag: 'FLAG{msfconsole_ready}',
     hint: 'msfconsole',
     explain: 'Metasploit is the most widely used hacking framework in the world — used by both professional penetration testers and real attackers. It\'s a collection of pre-written exploit code, payloads, and tools all wrapped in an easy-to-use interface.\n\nThink of it like a toolbox where someone else has already done the hard work of writing the exploit. You just pick the right tool, point it at a target, and pull the trigger.\n\nmsfconsole is the interactive command-line interface for Metasploit. When it loads you\'ll see the msf6 > prompt. From here you can search for exploits, load modules, configure options, and run attacks.\n\nMetasploit is free, open source, and comes pre-installed on Kali Linux.',
@@ -119,7 +111,7 @@ const ETERNALBLUE_CHALLENGES = [
     check: r => r.id === 'msfconsole',
   },
   {
-    id: 4, title: 'Load EternalBlue Module', pts: 150,
+    id: 3, title: 'Load EternalBlue Module', pts: 150,
     flag: 'FLAG{eternalblue_module_loaded}',
     hint: 'use exploit/windows/smb/ms17_010_eternalblue',
     explain: 'Metasploit organises its tools into "modules" sorted by category. The path exploit/windows/smb/ms17_010_eternalblue tells you exactly what it is: an exploit, targeting Windows, via SMB, specifically the MS17-010 vulnerability.\n\nThe "use" command loads that module and makes it active. You\'ll see the prompt change to include the module name — that\'s confirmation it\'s loaded.\n\nYou can type "show options" at any point to see what settings the module needs before it can run. You can also type "info" to read a full description of the exploit including its history and technical details.',
@@ -127,7 +119,7 @@ const ETERNALBLUE_CHALLENGES = [
     check: r => r.id === 'msf-use',
   },
   {
-    id: 5, title: 'Configure the Exploit', pts: 150,
+    id: 4, title: 'Configure the Exploit', pts: 150,
     flag: 'FLAG{rhosts_lhost_configured}',
     hint: 'set RHOSTS 10.10.20.10\nset LHOST 10.10.20.5',
     explain: 'Before running any exploit you need to tell it where to go and where to come back to.\n\nRHOSTS is the target — the machine you\'re attacking. "R" stands for Remote.\n\nLHOST is your own machine\'s IP address — where the shell will connect back to. "L" stands for Local.\n\nWhy does the shell connect back to us instead of us connecting to it? Because most firewalls block incoming connections but allow outgoing ones. A "reverse shell" has the victim machine reach out to the attacker, which looks like normal outbound traffic and slips past the firewall.\n\nAfter setting these, type "show options" to confirm everything looks right before running.',
@@ -135,7 +127,7 @@ const ETERNALBLUE_CHALLENGES = [
     check: r => r.id === 'msf-set',
   },
   {
-    id: 6, title: 'Run the Exploit', pts: 400,
+    id: 5, title: 'Run the Exploit', pts: 400,
     flag: 'FLAG{meterpreter_session_opened}',
     hint: 'run',
     explain: 'This is the moment everything comes together. Type "run" and watch.\n\nEternalBlue works by sending a specially crafted packet to the Windows SMB service. The packet triggers a buffer overflow — it writes data into a part of memory it shouldn\'t be able to reach, and that data happens to be code that we control. The Windows kernel executes our code before any authentication check happens.\n\nOur payload is called Meterpreter. It\'s an advanced shell that runs entirely in RAM — it never writes any files to disk. This makes it nearly invisible to antivirus software, which mostly looks for malicious files.\n\nIf the exploit succeeds you\'ll see "Meterpreter session 1 opened" and the prompt changes to meterpreter >. You\'re in.',
@@ -143,7 +135,7 @@ const ETERNALBLUE_CHALLENGES = [
     check: r => r.id === 'msf-run',
   },
   {
-    id: 7, title: 'Verify Access', pts: 200,
+    id: 6, title: 'Verify Access', pts: 200,
     flag: 'FLAG{nt_authority_system_eternalblue}',
     hint: 'getuid\nsysinfo',
     explain: 'First thing after getting a shell: figure out who you are and what you\'re on.\n\ngetuid asks "what account am I running as?" The answer — NT AUTHORITY\\SYSTEM — is the best possible result. SYSTEM is the highest privilege level on Windows, above even Administrator. It has unrestricted access to everything on the machine.\n\nThis is why EternalBlue is so dangerous: it exploits a kernel-level bug, so the code runs in the kernel\'s security context — SYSTEM — automatically. No privilege escalation needed. You go from zero access to full control in one step.\n\nsysinfo shows the machine details: OS version, hostname, architecture. This confirms we\'re on the right target and tells us what tools and techniques will work next.',
@@ -151,7 +143,7 @@ const ETERNALBLUE_CHALLENGES = [
     check: r => r.id === 'msf-getuid',
   },
   {
-    id: 8, title: 'Dump Password Hashes', pts: 300,
+    id: 7, title: 'Dump Password Hashes', pts: 300,
     flag: 'FLAG{sam_hashes_dumped}',
     hint: 'hashdump',
     explain: 'Every Windows machine stores local account passwords in a database called the SAM (Security Account Manager). The passwords aren\'t stored in plain text — they\'re stored as NT hashes, a scrambled version of the password.\n\nNormally the SAM is locked and encrypted while Windows is running. But because we\'re running as SYSTEM, we can read it directly.\n\nhashdump extracts all the local account hashes. You\'ll see the Administrator account and its hash. These hashes can be:\n\n1. Cracked offline using john or hashcat to recover the real password\n2. Used directly in Pass-the-Hash attacks against other machines on the network without cracking them at all\n\nIn a corporate network, local Administrator accounts often share the same password across hundreds of machines. One hash can unlock them all.',
@@ -159,7 +151,7 @@ const ETERNALBLUE_CHALLENGES = [
     check: r => r.id === 'msf-hashdump',
   },
   {
-    id: 9, title: 'Pillage the Filesystem', pts: 250,
+    id: 8, title: 'Pillage the Filesystem', pts: 250,
     flag: 'FLAG{secret_docs_exfiltrated}',
     hint: 'shell\ntype C:\\Users\\Administrator\\Desktop\\secret.txt',
     explain: 'Meterpreter is powerful but sometimes you just need a plain Windows command prompt. The "shell" command drops you into cmd.exe running as SYSTEM on the target machine.\n\nFrom here you can navigate the filesystem exactly like you\'re sitting at the keyboard. The Administrator\'s Desktop is always worth checking — people leave sensitive files there constantly. Passwords, internal documents, configuration files, notes with credentials.\n\nThis step simulates the data exfiltration phase of a real attack — finding and stealing the valuable data that justifies the whole operation. In real incidents, attackers often spend weeks quietly exploring a network after getting initial access, mapping out what\'s there before taking anything.\n\nType "exit" when done to return to the Meterpreter prompt.',

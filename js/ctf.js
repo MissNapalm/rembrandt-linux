@@ -28,8 +28,8 @@ const ETERNALBLUE_CHALLENGES = [
   {
     id: 4, title: 'Aim it', pts: 150,
     flag: 'FLAG{rhosts_lhost_configured}',
-    hint: 'set RHOSTS 10.10.10.10\nset LHOST 10.10.10.5',
-    explain: 'Two settings before we fire:\n\nRHOSTS — the target. R for Remote.\nLHOST — your own IP, where the shell will phone home. L for Local.\n\nWhy phone home instead of us connecting in? Firewalls usually let outbound traffic out but block incoming. A reverse shell looks like normal outbound and slips past.',
+    hint: 'set RHOSTS 10.10.10.10',
+    explain: 'One setting before we fire:\n\nRHOSTS — the target. R for Remote.\n\nLHOST (your own IP, where the shell will phone home) is auto-set from your machine. Why phone home instead of us connecting in? Firewalls usually let outbound traffic out but block incoming. A reverse shell looks like normal outbound and slips past.',
     done: false,
     check: r => r.id === 'msf-set',
   },

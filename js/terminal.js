@@ -905,7 +905,7 @@ function createTerminal() {
 
     // ── Command execution ───────────────────────────────────────────────────
     async _runCommand(raw) {
-      if (raw.trim()) { this._history.push(raw.trim()); this._histIdx = -1; }
+      if (raw.trim() && !SIM.msf) { this._history.push(raw.trim()); this._histIdx = -1; }
 
       this._simPush();
       const result = runCommand(raw);

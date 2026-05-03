@@ -330,12 +330,12 @@ ftp 10.10.10.50
 This is the EternalBlue target.
 
 ```
-nmap -sV -sC 10.10.20.10
-sudo nmap -p445 --script smb-vuln-ms17-010 10.10.20.10
+sudo nmap -sC -sV 10.10.20.10
 ```
 
-If the second command says `State: VULNERABLE`, you have what you came
-for. Move to the EternalBlue exploit chain (see `WALKTHROUGH.md`).
+`-sC` runs the default NSE script set, which includes `smb-vuln-*`. If
+the output says `State: VULNERABLE`, you have what you came for. Move to
+the EternalBlue exploit chain (see `WALKTHROUGH.md`).
 
 ---
 
@@ -608,8 +608,8 @@ journalctl -n 50; dmesg
 # Network
 sudo nmap -sn 10.10.10.0/24
 sudo nmap -sn 10.10.20.0/24
-nmap -sV -sC 10.10.10.10
-sudo nmap -p445 --script smb-vuln-ms17-010 10.10.20.10
+sudo nmap -sC -sV 10.10.10.10
+sudo nmap -sC -sV 10.10.20.10
 traceroute 10.10.10.10
 dig @10.10.10.10 corp.local ANY
 

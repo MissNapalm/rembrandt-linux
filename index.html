@@ -423,7 +423,7 @@
             <div class="pl-3 space-y-0.5">
               <div><span class="text-violet-400">sudo nmap -sn 10.10.10.0/24</span> <span class="text-slate-500"># ping sweep</span></div>
               <div><span class="text-violet-400">nmap -sV -sC 10.10.10.10</span> <span class="text-slate-500"># service scan</span></div>
-              <div><span class="text-violet-400">sudo nmap -p445 --script smb-vuln-ms17-010 10.10.20.10</span></div>
+              <div><span class="text-violet-400">sudo nmap -sC -sV 10.10.20.10</span></div>
               <div><span class="text-violet-400">enum4linux -a 10.10.10.10</span></div>
               <div><span class="text-violet-400">rpcclient -U "" -N 10.10.10.10</span></div>
               <div><span class="text-violet-400">smbclient -L //10.10.10.10 -N</span></div>

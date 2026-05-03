@@ -928,7 +928,6 @@ function createTerminal() {
         this._cwd  = '/home/' + registeredUser;
         SIM.user = registeredUser;
         SIM.cwd  = this._cwd;
-        this._writeLine('logout', 'd');
         this._writePrompt();
         return;
       }

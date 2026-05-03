@@ -4,7 +4,7 @@ const ETERNALBLUE_CHALLENGES = [
   {
     id: 1, title: 'Scan the target', pts: 150,
     flag: 'FLAG{ms17_010_eternalblue_confirmed}',
-    hint: 'sudo nmap -p445 --script smb-vuln-ms17-010 10.10.20.10',
+    hint: 'sudo nmap -sC -sV 10.10.20.10',
     explain: 'Recon first. We know there\'s a Windows 7 machine at 10.10.20.10 — now we knock on its door to see if it has the bug we\'re looking for.\n\nThe script we\'re running checks for MS17-010 — a 2017 flaw in Windows\'s file-sharing protocol (SMB). It\'s the same bug that powered WannaCry, the ransomware that took down the UK\'s NHS and 230,000 other machines in 150 countries.\n\nIf the scan reports State: VULNERABLE, the door is open.',
     done: false,
     check: r => r.id === 'nmap-eb-vuln',

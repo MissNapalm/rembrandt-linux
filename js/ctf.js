@@ -213,6 +213,7 @@ const CTF = {
       CTF._pasteToTerminal(ch.hint.split('\n')[0]);
       copyBtn.innerHTML = '<i class="fa fa-check"></i> Pasted';
       setTimeout(() => { copyBtn.innerHTML = '<i class="fa fa-copy"></i> Copy'; }, 1500);
+      document.getElementById('ctf-explain-modal').classList.add('hidden');
     };
     document.getElementById('ctf-explain-modal').classList.remove('hidden');
   },

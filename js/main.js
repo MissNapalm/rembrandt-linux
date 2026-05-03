@@ -301,15 +301,13 @@
 
   // ── DOOM easter egg ───────────────────────────────────────────────────────
   window._openDoom = function() {
-    const W = 800, H = 540;
+    // dos.zone uses js-dos (WebAssembly) — runs DOOM at full speed.
+    // Their player canvas is 4:3; 640×480 fits the shareware WAD natively.
+    const W = 640, H = 480;
     const body =
-      '<div style="position:relative;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center">' +
-        '<div style="position:absolute;color:#9ca3af;font-family:\'Courier New\',monospace;font-size:13px;text-align:center;line-height:1.7;pointer-events:none">' +
-          '<div style="color:#dc2626;font-weight:700;letter-spacing:2px;margin-bottom:8px">LOADING DOOM…</div>' +
-          'click the screen, then press ENTER<br>arrow keys move · CTRL fires · SPACE opens doors' +
-        '</div>' +
-        '<iframe src="https://archive.org/embed/msdos_DOOM_1993" ' +
-          'style="position:relative;width:100%;height:100%;border:0;background:transparent;z-index:1" ' +
+      '<div style="width:100%;height:100%;background:#000;overflow:hidden">' +
+        '<iframe src="https://silentspacemarine.com" ' +
+          'style="width:100%;height:100%;border:0;display:block" ' +
           'allowfullscreen allow="autoplay; fullscreen; gamepad"></iframe>' +
       '</div>';
     const win = createWindow('DOOM — knee-deep in the dead', W, H, body);

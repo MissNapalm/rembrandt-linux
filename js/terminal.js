@@ -308,7 +308,8 @@ function createTerminal() {
       if (data === '\x1b[A') {
         if (this._histIdx < this._history.length - 1) {
           this._histIdx++;
-          this._setInput(this._history[this._history.length - 1 - this._histIdx]);
+          const e = this._history[this._history.length - 1 - this._histIdx];
+          this._setInput(typeof e === 'string' ? e : (e && e.cmd) || '');
         }
         return;
       }
@@ -316,7 +317,8 @@ function createTerminal() {
       if (data === '\x1b[B') {
         if (this._histIdx > 0) {
           this._histIdx--;
-          this._setInput(this._history[this._history.length - 1 - this._histIdx]);
+          const e = this._history[this._history.length - 1 - this._histIdx];
+          this._setInput(typeof e === 'string' ? e : (e && e.cmd) || '');
         } else { this._histIdx = -1; this._setInput(''); }
         return;
       }
@@ -905,7 +907,10 @@ function createTerminal() {
 
     // ── Command execution ───────────────────────────────────────────────────
     async _runCommand(raw) {
-      if (raw.trim() && !SIM.msf) { this._history.push(raw.trim()); this._histIdx = -1; }
+      if (raw.trim()) {
+        this._history.push({ cmd: raw.trim(), inMsf: SIM.msf });
+        this._histIdx = -1;
+      }
 
       this._simPush();
       const result = runCommand(raw);
@@ -951,8 +956,9 @@ function createTerminal() {
       }
 
       if (result.history) {
-        this._history.forEach((cmd, i) => {
-          this._writeLine(String(i + 1).padStart(5) + '  ' + cmd, '');
+        const bashOnly = this._history.filter(e => !e.inMsf);
+        bashOnly.forEach((e, i) => {
+          this._writeLine(String(i + 1).padStart(5) + '  ' + e.cmd, '');
         });
         this._writePrompt();
         return;

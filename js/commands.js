@@ -347,6 +347,13 @@ const HANDLERS = [
       } else if (cwd === '/tmp') {
         dirs  = new Set(['systemd-private-abc123','snap-private-tmp','vmware-root']);
         files = ['sysinfo.txt','linpeas_output.txt','privesc_check.sh','exploit.py'];
+        // Append any files written into /tmp at runtime (e.g. exfiltrated dumps)
+        for (const k of Object.keys(SIM.files)) {
+          if (k.startsWith('/tmp/') && k.indexOf('/', 5) === -1) {
+            const name = k.slice(5);
+            if (!files.includes(name)) files.push(name);
+          }
+        }
         dotFiles = ['.font-unix', '.ICE-unix', '.X11-unix'];
       } else if (cwd === '/opt') {
         dirs = new Set(['metasploit-framework','impacket','crackmapexec','kerbrute','chisel']); files = [];
@@ -1279,10 +1286,17 @@ const HANDLERS = [
     ],
   },
 
-  // ── pypykatz — offline LSASS minidump parser ──────────────────────────────
+  // ── pypykatz — offline LSASS minidump parser (file exists) ────────────────
   {
     id: 'pypykatz',
-    match: c => /^pypykatz\s+lsa\s+minidump\s+/i.test(c),
+    match: c => {
+      const m = c.match(/^pypykatz\s+lsa\s+minidump\s+(\S+)/i);
+      if (!m) return false;
+      const path = m[1].replace(/^["']|["']$/g, '');
+      // Resolve relative paths against cwd
+      const abs = path.startsWith('/') ? path : (SIM.cwd.replace(/\/$/, '') + '/' + path);
+      return !!SIM.files[abs] || !!SIM.files[path];
+    },
     stepLines: [
       { t: 'INFO:pypykatz:Parsing file ' + 'lsass.dmp',                                cls: 'b', delay: jitter(280, 90) },
       { t: 'INFO:pypykatz:File parsed successfully',                                   cls: 'g', delay: jitter(2400, 700) },
@@ -1330,6 +1344,32 @@ const HANDLERS = [
       { t: '',                                                                                  delay: jitter(50, 20) },
     ],
     lines: [],
+  },
+
+  // ── pypykatz — file not found ─────────────────────────────────────────────
+  {
+    match: c => /^pypykatz\s+lsa\s+minidump\s+\S+/i.test(c),
+    lines: [{ t: (cmd) => {
+      const m = cmd.match(/^pypykatz\s+lsa\s+minidump\s+(\S+)/i);
+      const path = m ? m[1].replace(/^["']|["']$/g, '') : '<file>';
+      return `Traceback (most recent call last):\n` +
+        `  File "/usr/local/bin/pypykatz", line 33, in <module>\n` +
+        `    sys.exit(load_entry_point('pypykatz==0.6.10', 'console_scripts', 'pypykatz')())\n` +
+        `  File "/usr/local/lib/python3.11/dist-packages/pypykatz/__main__.py", line 90, in main\n` +
+        `    raise FileNotFoundError(args.minidumpfile)\n` +
+        `FileNotFoundError: ${path}`;
+    }, cls: 'r' }],
+  },
+
+  // ── pypykatz — usage (no args) ────────────────────────────────────────────
+  {
+    match: c => /^pypykatz(\s+lsa)?(\s+minidump)?\s*$/i.test(c) || c === 'pypykatz',
+    lines: [
+      { t: 'usage: pypykatz [-h] [-v] [--logfile LOGFILE]', cls: 'b' },
+      { t: '                {lsa,registry,live,sake,kerberos,...} ...' },
+      { t: '' },
+      { t: 'pypykatz: error: the following arguments are required: command', cls: 'r' },
+    ],
   },
 
   // ── hydra ─────────────────────────────────────────────────────────────────
@@ -2316,6 +2356,7 @@ const HANDLERS = [
       }
       if (arg.endsWith('.py')) return `${arg}: Python script, ASCII text executable`;
       if (arg.endsWith('.sh')) return `${arg}: Bourne-Again shell script, ASCII text executable`;
+      if (arg.endsWith('.dmp')) return `${arg}: Mini DuMP crash report, 64-bit, full memory`;
       if (arg.startsWith('/usr/bin/') || arg.startsWith('/bin/') || arg.startsWith('/sbin/')) {
         return `${arg}: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0, for GNU/Linux 3.2.0, stripped`;
       }
@@ -3333,6 +3374,66 @@ const HANDLERS = [
     lines: [],
   },
 
+  // ── msf: download (Meterpreter file transfer) ────────────────────────────
+  {
+    id: 'msf-download',
+    match: c => /^download\s+\S+/i.test(c) && SIM.msfMeter && !SIM.msfMeterWin,
+    lines: [{ t: (cmd) => {
+      const m = cmd.match(/^download\s+(\S+)(?:\s+(\S+))?/i);
+      const src = m ? m[1].replace(/^["']|["']$/g, '') : '';
+      const dst = m && m[2] ? m[2].replace(/^["']|["']$/g, '') : '/tmp/' + (src.split(/[\\/]/).pop() || 'file');
+      const srcLower = src.toLowerCase();
+      // lsass dump exfil path
+      if (srcLower.includes('lsass.dmp') && SIM.lsassDumped) {
+        // Mark the file as present on the Linux side. The actual content is
+        // a stand-in — pypykatz parsing is its own simulated handler.
+        SIM.files[dst] = '[BINARY MINIDUMP — 47.0 MB]';
+        return { openMsf: true, msfEcho:
+          '[*] downloading: ' + src + ' -> ' + dst + '\n' +
+          '[*] Downloaded 4.00 MiB of 47.00 MiB (8.51%): ' + src + '\n' +
+          '[*] Downloaded 12.00 MiB of 47.00 MiB (25.53%): ' + src + '\n' +
+          '[*] Downloaded 24.00 MiB of 47.00 MiB (51.06%): ' + src + '\n' +
+          '[*] Downloaded 36.00 MiB of 47.00 MiB (76.60%): ' + src + '\n' +
+          '[*] Downloaded 47.00 MiB of 47.00 MiB (100.00%): ' + src + '\n' +
+          '[*] download   : ' + src + ' -> ' + dst
+        };
+      }
+      // SAM hive exfil
+      if ((srcLower.includes('sam.save') || srcLower.includes('system.save') || srcLower.includes('security.save'))) {
+        SIM.files[dst] = '[BINARY REGISTRY HIVE]';
+        return { openMsf: true, msfEcho:
+          '[*] downloading: ' + src + ' -> ' + dst + '\n' +
+          '[*] download   : ' + src + ' -> ' + dst
+        };
+      }
+      // Generic file in known Windows paths — let it through with no-op exfil
+      if (/^[a-z]:\\/i.test(src)) {
+        SIM.files[dst] = '[BINARY FILE]';
+        return { openMsf: true, msfEcho:
+          '[*] downloading: ' + src + ' -> ' + dst + '\n' +
+          '[*] download   : ' + src + ' -> ' + dst
+        };
+      }
+      return { openMsf: true, msfEcho:
+        '[-] core_channel_open: Operation failed: The system cannot find the file specified.'
+      };
+    }}],
+  },
+
+  // ── msf: upload (counterpart, mostly for completeness) ───────────────────
+  {
+    match: c => /^upload\s+\S+/i.test(c) && SIM.msfMeter && !SIM.msfMeterWin,
+    lines: [{ t: (cmd) => {
+      const m = cmd.match(/^upload\s+(\S+)(?:\s+(\S+))?/i);
+      const src = m ? m[1] : '';
+      const dst = m && m[2] ? m[2] : 'C:\\Windows\\Temp\\' + (src.split(/[\\/]/).pop() || 'file');
+      return { openMsf: true, msfEcho:
+        '[*] uploading  : ' + src + ' -> ' + dst + '\n' +
+        '[*] uploaded   : ' + src + ' -> ' + dst
+      };
+    }}],
+  },
+
   // ── msf: shell (drop to windows cmd) ─────────────────────────────────────
   {
     match: c => c === 'shell' && SIM.msfMeter,
@@ -3603,6 +3704,7 @@ function runCommand(rawInput) {
       // Validate against known dirs
       const knownDirs = [
         'C:\\', 'C:\\Windows', 'C:\\Windows\\system32', 'C:\\Windows\\system32\\config',
+        'C:\\Windows\\Temp', 'C:\\Temp',
         'C:\\Users', 'C:\\Users\\Administrator', 'C:\\Users\\Administrator\\Desktop',
         'C:\\Users\\Administrator\\Documents', 'C:\\Users\\Administrator\\Downloads',
         'C:\\Program Files', 'C:\\Program Files (x86)',
@@ -3668,6 +3770,8 @@ function runCommand(rawInput) {
         'c:\\windows':                [['<DIR>','system32'],['<DIR>','SysWOW64'],['<DIR>','NTDS'],['<DIR>','SYSVOL'],['<DIR>','Temp'],['<DIR>','inf']],
         'c:\\windows\\system32':       [['<DIR>','config'],['<DIR>','drivers'],['<DIR>','wbem'],['32,768','cmd.exe'],['45,056','net.exe'],['36,864','whoami.exe'],['28,672','ipconfig.exe']],
         'c:\\windows\\system32\\config':[['262,144','SAM'],['262,144','SECURITY'],['786,432','SOFTWARE'],['1,048,576','SYSTEM'],['32,768','DEFAULT']],
+        'c:\\windows\\temp':           SIM.lsassDumped ? [['49,283,072','lsass.dmp']] : [],
+        'c:\\temp':                    SIM.lsassDumped ? [['49,283,072','lsass.dmp']] : [],
         'c:\\windows\\ntds':           [['18,874,368','ntds.dit'],['1,048,576','edb.log'],['8,192','edb.chk']],
         'c:\\windows\\sysvol':         [['<DIR>','domain'],['<DIR>','staging'],['<DIR>','sysvol']],
         'c:\\users':                  [['<DIR>','Administrator'],['<DIR>','Default'],['<DIR>','Public']],
@@ -3703,7 +3807,7 @@ function runCommand(rawInput) {
           out.push({ t: `01/15/2024  02:23 PM    <DIR>          ${name}`, cls: 'b' });
           dirCount++;
         } else {
-          const cls = name.endsWith('.csv') ? 'r' : name.endsWith('.txt') ? 'y' : '';
+          const cls = name.endsWith('.csv') ? 'r' : name.endsWith('.txt') ? 'y' : name.endsWith('.dmp') ? 'g' : '';
           out.push({ t: `01/15/2024  02:23 PM    ${size.padStart(14)}     ${name}`, cls });
           fileCount++;
           fileBytes += parseInt(size.replace(/,/g, '')) || 0;
@@ -3964,38 +4068,38 @@ function runCommand(rawInput) {
       { t: 'windir=C:\\Windows' },
     ]};
 
-    if (cmd === 'tasklist') return { lines: [
-      { t: 'Image Name                     PID Session Name        Session#    Mem Usage', cls: 'b' },
-      { t: '========================= ======== ================ =========== ============', cls: 'd' },
-      { t: 'System Idle Process              0 Services                   0          4 K' },
-      { t: 'System                           4 Services                   0        268 K' },
-      { t: 'smss.exe                       272 Services                   0      1,068 K' },
-      { t: 'csrss.exe                      352 Services                   0      4,892 K' },
-      { t: 'wininit.exe                    412 Services                   0      3,920 K' },
-      { t: 'services.exe                   452 Services                   0      6,784 K' },
-      { t: 'lsass.exe                      460 Services                   0     11,236 K', cls: 'y' },
-      { t: 'svchost.exe                    824 Services                   0      9,012 K' },
-      { t: 'spoolsv.exe                    848 Services                   0      8,448 K' },
-      { t: 'explorer.exe                  1980 Console                    1     22,108 K' },
-      { t: 'cmd.exe                       1337 Services                   0      2,840 K', cls: 'g' },
-      { t: 'conhost.exe                   1338 Services                   0      4,212 K' },
+    if (cmd === 'tasklist') return { stepLines: [
+      { t: 'Image Name                     PID Session Name        Session#    Mem Usage', cls: 'b',        delay: jitter(220, 80) },
+      { t: '========================= ======== ================ =========== ============', cls: 'd',        delay: jitter(40, 15) },
+      { t: 'System Idle Process              0 Services                   0          4 K',                  delay: jitter(35, 15) },
+      { t: 'System                           4 Services                   0        268 K',                  delay: jitter(28, 12) },
+      { t: 'smss.exe                       272 Services                   0      1,068 K',                  delay: jitter(28, 12) },
+      { t: 'csrss.exe                      352 Services                   0      4,892 K',                  delay: jitter(32, 14) },
+      { t: 'wininit.exe                    412 Services                   0      3,920 K',                  delay: jitter(28, 12) },
+      { t: 'services.exe                   452 Services                   0      6,784 K',                  delay: jitter(32, 14) },
+      { t: 'lsass.exe                      460 Services                   0     11,236 K', cls: 'y',        delay: jitter(36, 14) },
+      { t: 'svchost.exe                    824 Services                   0      9,012 K',                  delay: jitter(28, 12) },
+      { t: 'spoolsv.exe                    848 Services                   0      8,448 K',                  delay: jitter(28, 12) },
+      { t: 'explorer.exe                  1980 Console                    1     22,108 K',                  delay: jitter(38, 14) },
+      { t: 'cmd.exe                       1337 Services                   0      2,840 K', cls: 'g',        delay: jitter(32, 12) },
+      { t: 'conhost.exe                   1338 Services                   0      4,212 K',                  delay: jitter(28, 12) },
     ]};
 
-    if (cmd === 'tasklist /svc') return { lines: [
-      { t: 'Image Name                     PID Services', cls: 'b' },
-      { t: '========================= ======== ============================================', cls: 'd' },
-      { t: 'System Idle Process              0 N/A' },
-      { t: 'System                           4 N/A' },
-      { t: 'smss.exe                       272 N/A' },
-      { t: 'services.exe                   452 N/A' },
-      { t: 'lsass.exe                      460 KeyIso, SamSs, VaultSvc' },
-      { t: 'svchost.exe                    624 DcomLaunch, PlugPlay, Power' },
-      { t: 'svchost.exe                    688 RpcEptMapper, RpcSs' },
-      { t: 'svchost.exe                    824 Dhcp, EventLog, lmhosts' },
-      { t: 'svchost.exe                    900 LanmanServer, Schedule, SENS' },
-      { t: 'spoolsv.exe                    848 Spooler' },
-      { t: 'sqlservr.exe                  1148 MSSQLSERVER', cls: 'y' },
-      { t: 'cmd.exe                       1337 N/A' },
+    if (cmd === 'tasklist /svc') return { stepLines: [
+      { t: 'Image Name                     PID Services', cls: 'b',                                         delay: jitter(280, 90) },
+      { t: '========================= ======== ============================================', cls: 'd',     delay: jitter(40, 15) },
+      { t: 'System Idle Process              0 N/A',                                                         delay: jitter(35, 15) },
+      { t: 'System                           4 N/A',                                                         delay: jitter(28, 12) },
+      { t: 'smss.exe                       272 N/A',                                                         delay: jitter(28, 12) },
+      { t: 'services.exe                   452 N/A',                                                         delay: jitter(32, 14) },
+      { t: 'lsass.exe                      460 KeyIso, SamSs, VaultSvc',                                     delay: jitter(38, 14) },
+      { t: 'svchost.exe                    624 DcomLaunch, PlugPlay, Power',                                 delay: jitter(34, 14) },
+      { t: 'svchost.exe                    688 RpcEptMapper, RpcSs',                                         delay: jitter(28, 12) },
+      { t: 'svchost.exe                    824 Dhcp, EventLog, lmhosts',                                     delay: jitter(28, 12) },
+      { t: 'svchost.exe                    900 LanmanServer, Schedule, SENS',                                delay: jitter(28, 12) },
+      { t: 'spoolsv.exe                    848 Spooler',                                                     delay: jitter(28, 12) },
+      { t: 'sqlservr.exe                  1148 MSSQLSERVER', cls: 'y',                                       delay: jitter(38, 14) },
+      { t: 'cmd.exe                       1337 N/A',                                                         delay: jitter(32, 12) },
     ]};
 
     if (cmd === 'sc query') return { lines: [

@@ -70,7 +70,7 @@
     // Populate home subdirectory files
     SIM.files[h + '/Desktop/README.txt']                    = `Welcome to RembrandtOS 2024.2\nThis is your Desktop folder.`;
     SIM.files[h + '/Documents/credentials.txt']             = `# Credentials found during engagement\n# DO NOT SHARE\njohn.doe : Password1!\nsvc_backup : Backup2023!`;
-    SIM.files[h + '/Documents/network_notes.md']            = `# Network Notes\n## Targets\n- 10.10.10.10 - DC01.CORP.LOCAL (Domain Controller)\n- 10.10.10.5  - Kali attack box\n\n## Open Ports (DC01)\n- 88  Kerberos\n- 389 LDAP\n- 445 SMB\n- 3268 Global Catalog`;
+    SIM.files[h + '/Documents/network_notes.md']            = `# Network Notes\n## Targets\n- 10.10.10.10 - DC01.CORP.LOCAL (Domain Controller)\n- 10.10.10.5  - Rembrandt attack box\n\n## Open Ports (DC01)\n- 88  Kerberos\n- 389 LDAP\n- 445 SMB\n- 3268 Global Catalog`;
     SIM.files[h + '/Documents/reports/pentest_report_draft.md'] = `# Penetration Test Report - DRAFT\n## Executive Summary\nA full domain compromise was achieved via Kerberoasting.\n## Findings\n1. Weak service account passwords\n2. No account lockout on service accounts\n3. RC4 encryption allowed on Kerberos tickets`;
     SIM.files[h + '/Documents/reports/scope.txt']            = `# Engagement Scope\nClient: CORP.LOCAL\nIP Range: 10.10.10.0/24\nDomain Controller: 10.10.10.10\nStart: 2024-01-15\nEnd: 2024-01-22`;
     SIM.files[h + '/Documents/tools/nmap_cheatsheet.txt']    = `# Nmap Cheatsheet\nnmap -sn 10.10.10.0/24          # ping sweep\nnmap -sV -sC -p- 10.10.10.10    # full scan\nnmap -sU --top-ports 100 <ip>   # UDP scan\nnmap --script vuln <ip>         # vuln scan`;

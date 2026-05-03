@@ -210,15 +210,29 @@ const CTF = {
     document.getElementById('ctf-explain-hint').textContent  = ch.hint;
     const copyBtn = document.getElementById('ctf-explain-copy');
     const cmdBox  = document.getElementById('ctf-explain-cmd');
+    const modal   = document.getElementById('ctf-explain-modal');
+    const onKey = e => {
+      if (modal.classList.contains('hidden')) {
+        document.removeEventListener('keydown', onKey, true);
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        pasteAndClose();
+      }
+    };
     const pasteAndClose = () => {
       CTF._pasteToTerminal(ch.hint.split('\n')[0]);
       copyBtn.innerHTML = '<i class="fa fa-check"></i> Pasted';
       setTimeout(() => { copyBtn.innerHTML = '<i class="fa fa-copy"></i> Copy'; }, 1500);
-      document.getElementById('ctf-explain-modal').classList.add('hidden');
+      modal.classList.add('hidden');
+      document.removeEventListener('keydown', onKey, true);
     };
     copyBtn.onclick = e => { e.stopPropagation(); pasteAndClose(); };
     cmdBox.onclick = pasteAndClose;
-    document.getElementById('ctf-explain-modal').classList.remove('hidden');
+    document.addEventListener('keydown', onKey, true);
+    modal.classList.remove('hidden');
   },
 
   showFlagPopup(challenge) {

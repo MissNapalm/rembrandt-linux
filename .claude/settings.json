@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/missnapalm/Desktop/kerberoast commit -m ' *)",
+      "Bash(awk '{ gsub\\(/\\\\x1b\\\\[[0-9;]*m/,\"\"\\); print length\\($0\\)\": \"$0 }')",
+      "Bash(git commit *)"
+    ]
+  }
+}

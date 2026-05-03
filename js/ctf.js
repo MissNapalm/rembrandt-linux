@@ -208,7 +208,11 @@ const CTF = {
     SIM.ebTarget = '10.10.20.10';
     SIM.user = 'kali';
     SIM.cwd  = '/home/kali';
-    TERM_INSTANCES.forEach(t => t._updatePrompt());
+    TERM_INSTANCES.forEach(t => {
+      t._user = 'kali';
+      t._cwd  = '/home/kali';
+      t._updatePrompt();
+    });
     this._loadState();
     this._renderSidebar();
   },
@@ -237,7 +241,11 @@ const CTF = {
     SIM.meterpreter = false;
     SIM.user = 'kali';
     SIM.cwd  = '/home/kali';
-    TERM_INSTANCES.forEach(t => t._updatePrompt());
+    TERM_INSTANCES.forEach(t => {
+      t._user = 'kali';
+      t._cwd  = '/home/kali';
+      t._updatePrompt();
+    });
     this._renderSidebar();
   },
 

@@ -9,7 +9,14 @@
       if (titleScreen.style.display === 'none') return;
       titleScreen.style.opacity = '0';
       titleScreen.style.transition = 'opacity 0.25s';
-      setTimeout(() => { titleScreen.style.display = 'none'; }, 250);
+      setTimeout(() => {
+        titleScreen.style.display = 'none';
+        // Now that the auth screen is actually visible, focus the right field.
+        const u = document.getElementById('auth-username');
+        const p = document.getElementById('auth-password');
+        const target = (u && !u.classList.contains('hidden') && !u.closest('.hidden')) ? u : p;
+        target?.focus();
+      }, 250);
     };
     titlePlay.addEventListener('click', dismissTitle);
     document.addEventListener('keydown', e => {

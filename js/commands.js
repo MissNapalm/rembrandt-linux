@@ -19,6 +19,8 @@ const SIM = {
   msfMeterWin: false,   // in windows shell from meterpreter
   msfLastSearch: [],    // module names from the last `search` (for `use <n>`)
   legacyPwned: false,   // EternalBlue succeeded
+  kiwiLoaded: false,    // mimikatz/kiwi loaded into meterpreter
+  lsassDumped: false,   // lsass.dmp written to disk on the target
   files: {
     '/home/rembrandt/notes.txt': `# Notes - DO NOT SHARE
 # Found on workstation WS01 during initial recon
@@ -1275,6 +1277,59 @@ const HANDLERS = [
       { t: '2024/01/15 14:05:32 >  [+] VALID USERNAME: svc_backup@CORP.LOCAL', cls: 'g' },
       { t: '2024/01/15 14:05:33 >  Done! Tested 100 usernames, 3 valid', cls: 'g' },
     ],
+  },
+
+  // ── pypykatz — offline LSASS minidump parser ──────────────────────────────
+  {
+    id: 'pypykatz',
+    match: c => /^pypykatz\s+lsa\s+minidump\s+/i.test(c),
+    stepLines: [
+      { t: 'INFO:pypykatz:Parsing file ' + 'lsass.dmp',                                cls: 'b', delay: jitter(280, 90) },
+      { t: 'INFO:pypykatz:File parsed successfully',                                   cls: 'g', delay: jitter(2400, 700) },
+      { t: '',                                                                                  delay: jitter(180, 60) },
+      { t: 'FILE: lsass.dmp',                                                          cls: 'b', delay: jitter(15, 10) },
+      { t: '== LogonSession ==',                                                       cls: 'b', delay: jitter(420, 140) },
+      { t: 'authentication_id 996 (3e4)',                                              cls: 'd', delay: jitter(15, 10) },
+      { t: 'session_id 0',                                                             cls: 'd', delay: jitter(15, 10) },
+      { t: 'username DC01$',                                                                    delay: jitter(15, 10) },
+      { t: 'domainname CORP',                                                                   delay: jitter(15, 10) },
+      { t: 'logon_server',                                                             cls: 'd', delay: jitter(15, 10) },
+      { t: 'logon_time 2024-01-15T15:14:33.234567',                                    cls: 'd', delay: jitter(15, 10) },
+      { t: '\t== MSV ==',                                                              cls: 'b', delay: jitter(15, 10) },
+      { t: '\t\tUsername: DC01$',                                                               delay: jitter(15, 10) },
+      { t: '\t\tDomain: CORP',                                                                  delay: jitter(15, 10) },
+      { t: '\t\tLM: NA',                                                               cls: 'd', delay: jitter(15, 10) },
+      { t: '\t\tNT: 8c4d4e3a92ad1f0b4e9c8d7a6f5e4d3c',                                 cls: 'g', delay: jitter(15, 10) },
+      { t: '\t\tSHA1: 9f1e8d7c6b5a4e3d2c1b0a9f8e7d6c5b4a3f2e1d',                       cls: 'g', delay: jitter(15, 10) },
+      { t: '',                                                                                  delay: jitter(380, 120) },
+      { t: '== LogonSession ==',                                                       cls: 'b', delay: jitter(15, 10) },
+      { t: 'authentication_id 281842 (44d32)',                                         cls: 'd', delay: jitter(15, 10) },
+      { t: 'username Administrator',                                                            delay: jitter(15, 10) },
+      { t: 'domainname DC01',                                                                   delay: jitter(15, 10) },
+      { t: '\t== MSV ==',                                                              cls: 'b', delay: jitter(15, 10) },
+      { t: '\t\tUsername: Administrator',                                                       delay: jitter(15, 10) },
+      { t: '\t\tDomain: DC01',                                                                  delay: jitter(15, 10) },
+      { t: '\t\tNT: fc525c9683e8fe067095ba2ddc971889',                                 cls: 'g', delay: jitter(15, 10) },
+      { t: '\t== WDIGEST [44d32]==',                                                   cls: 'b', delay: jitter(15, 10) },
+      { t: '\t\tusername Administrator',                                                        delay: jitter(15, 10) },
+      { t: '\t\tdomainname DC01',                                                               delay: jitter(15, 10) },
+      { t: '\t\tpassword SuperS3cret_Admin!2024',                                      cls: 'g', delay: jitter(15, 10) },
+      { t: '\t== Kerberos ==',                                                         cls: 'b', delay: jitter(15, 10) },
+      { t: '\t\tUsername: Administrator',                                                       delay: jitter(15, 10) },
+      { t: '\t\tDomain: CORP.LOCAL',                                                            delay: jitter(15, 10) },
+      { t: '\t\tPassword: SuperS3cret_Admin!2024',                                     cls: 'g', delay: jitter(15, 10) },
+      { t: '',                                                                                  delay: jitter(420, 130) },
+      { t: '== LogonSession ==',                                                       cls: 'b', delay: jitter(15, 10) },
+      { t: 'authentication_id 425918 (67ffe)',                                         cls: 'd', delay: jitter(15, 10) },
+      { t: 'username svc_backup',                                                               delay: jitter(15, 10) },
+      { t: 'domainname CORP',                                                                   delay: jitter(15, 10) },
+      { t: '\t== MSV ==',                                                              cls: 'b', delay: jitter(15, 10) },
+      { t: '\t\tNT: 8c802621d2e36fc074345dded890f3e5',                                 cls: 'g', delay: jitter(15, 10) },
+      { t: '\t== WDIGEST [67ffe]==',                                                   cls: 'b', delay: jitter(15, 10) },
+      { t: '\t\tpassword Backup2024!',                                                 cls: 'g', delay: jitter(15, 10) },
+      { t: '',                                                                                  delay: jitter(50, 20) },
+    ],
+    lines: [],
   },
 
   // ── hydra ─────────────────────────────────────────────────────────────────
@@ -3153,6 +3208,131 @@ const HANDLERS = [
     })}],
   },
 
+  // ── msf: load kiwi (mimikatz extension) ──────────────────────────────────
+  {
+    id: 'msf-load-kiwi',
+    match: c => /^load\s+(kiwi|mimikatz)\s*$/i.test(c) && SIM.msfMeter,
+    stepLines: [
+      { t: 'Loading extension kiwi...',                                                         cls: 'b', delay: jitter(900, 300) },
+      { t: '  .#####.   mimikatz 2.2.0 20191125 (x64/windows)',                                 cls: 'd', delay: jitter(450, 150) },
+      { t: ' .## ^ ##.  "A La Vie, A L\'Amour" - (oe.eo)',                                      cls: 'd', delay: jitter(20, 10) },
+      { t: ' ## / \\ ##  /*** Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com )',         cls: 'd', delay: jitter(20, 10) },
+      { t: ' ## \\ / ##       > http://blog.gentilkiwi.com/mimikatz',                           cls: 'd', delay: jitter(20, 10) },
+      { t: ' \'## v ##\'       Vincent LE TOUX            ( vincent.letoux@gmail.com )',         cls: 'd', delay: jitter(20, 10) },
+      { t: '  \'#####\'        > http://pingcastle.com / http://mysmartlogon.com  ***/',        cls: 'd', delay: jitter(20, 10) },
+      { t: '',                                                                                          delay: jitter(60, 20) },
+      { t: 'Success.',                                                                          cls: 'g', delay: jitter(700, 200) },
+    ],
+    lines: [],
+    after: () => { SIM.kiwiLoaded = true; },
+  },
+
+  // ── msf: kiwi creds_all (the iconic plaintext-from-LSASS dump) ───────────
+  {
+    id: 'msf-kiwi-creds-all',
+    match: c => /^creds_all\s*$/i.test(c) && SIM.msfMeter && SIM.kiwiLoaded,
+    stepLines: [
+      { t: '[!] Not currently running as SYSTEM',                                                cls: 'y', delay: jitter(400, 150) },
+      { t: '[*] Attempting to getprivs',                                                         cls: 'b', delay: jitter(380, 120) },
+      { t: '[+] Got SeDebugPrivilege',                                                           cls: 'g', delay: jitter(620, 180) },
+      { t: '[*] Retrieving all credentials',                                                     cls: 'b', delay: jitter(1100, 350) },
+      { t: 'msv credentials',                                                                    cls: 'b', delay: jitter(900, 300) },
+      { t: '===============',                                                                    cls: 'd', delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(15, 10) },
+      { t: 'Username        Domain  NTLM                              SHA1',                     cls: 'b', delay: jitter(15, 10) },
+      { t: '--------        ------  ----                              ----',                     cls: 'd', delay: jitter(15, 10) },
+      { t: 'Administrator   DC01    fc525c9683e8fe067095ba2ddc971889  d2c8eaeae3a6e9e60a64e1eaa5e9d4f7c09a8b2c',                       cls: 'g', delay: jitter(15, 10) },
+      { t: 'svc_backup      CORP    8c802621d2e36fc074345dded890f3e5  4e6a91b3c8d2f7e0a1b9c4d8e7f5a2b6c3d9e0f1',                       cls: 'g', delay: jitter(15, 10) },
+      { t: 'it.admin        CORP    a4d3b8e9f1c2d5b7a8e6f9c1d4b2e7a9  7b2c8e9f1a4d6e8b3c5f7a9d2e4b6c8e0f1a3d5e',                       cls: 'g', delay: jitter(15, 10) },
+      { t: 'DC01$           CORP    8c4d4e3a92ad1f0b4e9c8d7a6f5e4d3c  9f1e8d7c6b5a4e3d2c1b0a9f8e7d6c5b4a3f2e1d',                       cls: 'g', delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(700, 200) },
+      { t: 'wdigest credentials',                                                                cls: 'b', delay: jitter(900, 250) },
+      { t: '===================',                                                                cls: 'd', delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(15, 10) },
+      { t: 'Username        Domain  Password',                                                   cls: 'b', delay: jitter(15, 10) },
+      { t: '--------        ------  --------',                                                   cls: 'd', delay: jitter(15, 10) },
+      { t: '(null)          (null)  (null)',                                                              delay: jitter(15, 10) },
+      { t: 'DC01$           CORP    (null)',                                                              delay: jitter(15, 10) },
+      { t: 'Administrator   DC01    SuperS3cret_Admin!2024',                                     cls: 'g', delay: jitter(15, 10) },
+      { t: 'svc_backup      CORP    Backup2024!',                                                cls: 'g', delay: jitter(15, 10) },
+      { t: 'it.admin        CORP    ITadm1n#Winter2024',                                         cls: 'g', delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(800, 250) },
+      { t: 'tspkg credentials',                                                                  cls: 'b', delay: jitter(450, 150) },
+      { t: '=================',                                                                  cls: 'd', delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(15, 10) },
+      { t: 'Username        Domain  Password',                                                   cls: 'b', delay: jitter(15, 10) },
+      { t: '--------        ------  --------',                                                   cls: 'd', delay: jitter(15, 10) },
+      { t: 'Administrator   DC01    SuperS3cret_Admin!2024',                                     cls: 'g', delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(700, 200) },
+      { t: 'kerberos credentials',                                                               cls: 'b', delay: jitter(550, 180) },
+      { t: '====================',                                                               cls: 'd', delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(15, 10) },
+      { t: 'Username        Domain          Password',                                           cls: 'b', delay: jitter(15, 10) },
+      { t: '--------        ------          --------',                                           cls: 'd', delay: jitter(15, 10) },
+      { t: '(null)          (null)          (null)',                                                      delay: jitter(15, 10) },
+      { t: 'dc01$           CORP.LOCAL      (null)',                                                      delay: jitter(15, 10) },
+      { t: 'Administrator   CORP.LOCAL      SuperS3cret_Admin!2024',                             cls: 'g', delay: jitter(15, 10) },
+      { t: 'svc_backup      CORP.LOCAL      Backup2024!',                                        cls: 'g', delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(50, 20) },
+    ],
+    lines: [],
+  },
+
+  // ── msf: kiwi creds_all but kiwi not loaded ──────────────────────────────
+  {
+    match: c => /^creds_all\s*$/i.test(c) && SIM.msfMeter && !SIM.kiwiLoaded,
+    lines: [{ t: '[-] Unknown command: creds_all. Did you forget `load kiwi`?', cls: 'r' }],
+  },
+
+  // ── msf: kiwi lsa_dump_sam ───────────────────────────────────────────────
+  {
+    id: 'msf-kiwi-lsa-dump-sam',
+    match: c => /^lsa_dump_sam\s*$/i.test(c) && SIM.msfMeter && SIM.kiwiLoaded,
+    stepLines: [
+      { t: '[+] Running as SYSTEM',                                                              cls: 'g', delay: jitter(400, 150) },
+      { t: '[*] Dumping SAM',                                                                    cls: 'b', delay: jitter(950, 280) },
+      { t: 'Domain : DC01',                                                                      cls: 'b', delay: jitter(620, 180) },
+      { t: 'SysKey : a3f4e2c1b8d97e6f5a4c3b2e1d0f9e8a',                                                   delay: jitter(15, 10) },
+      { t: 'Local SID : S-1-5-21-3471439708-2069099870-1234567890',                                       delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(380, 120) },
+      { t: 'SAMKey : 8a9b1c2d3e4f5a6b7c8d9e0f1a2b3c4d',                                                   delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(15, 10) },
+      { t: 'RID  : 000001f4 (500)',                                                              cls: 'b', delay: jitter(15, 10) },
+      { t: 'User : Administrator',                                                                        delay: jitter(15, 10) },
+      { t: '  Hash NTLM: fc525c9683e8fe067095ba2ddc971889',                                      cls: 'g', delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(420, 130) },
+      { t: 'RID  : 000001f5 (501)',                                                              cls: 'b', delay: jitter(15, 10) },
+      { t: 'User : Guest',                                                                                delay: jitter(15, 10) },
+      { t: '  Hash NTLM: 31d6cfe0d16ae931b73c59d7e0c089c0',                                               delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(50, 20) },
+    ],
+    lines: [],
+  },
+
+  // ── msf: kiwi lsa_dump_secrets ───────────────────────────────────────────
+  {
+    id: 'msf-kiwi-lsa-dump-secrets',
+    match: c => /^lsa_dump_secrets\s*$/i.test(c) && SIM.msfMeter && SIM.kiwiLoaded,
+    stepLines: [
+      { t: '[+] Running as SYSTEM',                                                              cls: 'g', delay: jitter(380, 130) },
+      { t: '[*] Dumping LSA secrets',                                                            cls: 'b', delay: jitter(1300, 400) },
+      { t: 'Domain : DC01',                                                                      cls: 'b', delay: jitter(15, 10) },
+      { t: 'SysKey : a3f4e2c1b8d97e6f5a4c3b2e1d0f9e8a',                                                   delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(450, 150) },
+      { t: 'Secret  : DefaultPassword',                                                          cls: 'b', delay: jitter(15, 10) },
+      { t: 'cur/text: SuperS3cret_Admin!2024',                                                   cls: 'g', delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(380, 120) },
+      { t: 'Secret  : $MACHINE.ACC',                                                             cls: 'b', delay: jitter(15, 10) },
+      { t: 'cur/hex : 8c 4d 4e 3a 92 ad 1f 0b 4e 9c 8d 7a 6f 5e 4d 3c',                                   delay: jitter(15, 10) },
+      { t: '    NTLM: 8c4d4e3a92ad1f0b4e9c8d7a6f5e4d3c',                                                  delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(420, 130) },
+      { t: 'Secret  : _SC_BackupAgent / service \'BackupAgent\'',                                cls: 'b', delay: jitter(15, 10) },
+      { t: 'cur/text: Backup2024!',                                                              cls: 'g', delay: jitter(15, 10) },
+      { t: '',                                                                                            delay: jitter(50, 20) },
+    ],
+    lines: [],
+  },
+
   // ── msf: shell (drop to windows cmd) ─────────────────────────────────────
   {
     match: c => c === 'shell' && SIM.msfMeter,
@@ -3579,6 +3759,376 @@ function runCommand(rawInput) {
         { t: 'svc_backup: Backup2021!', cls: 'y' },
       ]};
       return { lines: [{ t: `The system cannot find the file specified.`, cls: 'r' }] };
+    }
+
+    if (cmd === 'whoami /groups') return { lines: [
+      { t: 'GROUP INFORMATION' }, { t: '-----------------' }, { t: '' },
+      { t: 'Group Name                                Type             SID          Attributes', cls: 'b' },
+      { t: '========================================= ================ ============ ==============================', cls: 'd' },
+      { t: 'BUILTIN\\Administrators                    Alias            S-1-5-32-544 Enabled by default, Enabled group, Group owner', cls: 'g' },
+      { t: 'BUILTIN\\Users                             Alias            S-1-5-32-545 Mandatory group, Enabled by default, Enabled group' },
+      { t: 'NT AUTHORITY\\SYSTEM                       Well-known group S-1-5-18     Enabled by default, Enabled group', cls: 'g' },
+      { t: 'NT AUTHORITY\\Authenticated Users          Well-known group S-1-5-11     Mandatory group, Enabled by default, Enabled group' },
+      { t: 'NT AUTHORITY\\This Organization            Well-known group S-1-5-15     Mandatory group, Enabled by default, Enabled group' },
+      { t: 'Mandatory Label\\System Mandatory Level    Label            S-1-16-16384' },
+    ]};
+
+    if (cmd === 'systeminfo') return { lines: [
+      { t: 'Host Name:                 DC01', cls: 'b' },
+      { t: 'OS Name:                   Microsoft Windows 7 Ultimate', cls: 'b' },
+      { t: 'OS Version:                6.1.7601 Service Pack 1 Build 7601' },
+      { t: 'OS Manufacturer:           Microsoft Corporation' },
+      { t: 'OS Configuration:          Standalone Workstation' },
+      { t: 'OS Build Type:             Multiprocessor Free' },
+      { t: 'Registered Owner:          Windows User' },
+      { t: 'Registered Organization:   ' },
+      { t: 'Product ID:                00426-OEM-8992662-00010' },
+      { t: 'Original Install Date:     1/8/2024, 11:42:18 AM' },
+      { t: 'System Boot Time:          1/15/2024, 7:14:33 AM' },
+      { t: 'System Manufacturer:       VMware, Inc.' },
+      { t: 'System Model:              VMware Virtual Platform' },
+      { t: 'System Type:               x64-based PC' },
+      { t: 'Processor(s):              1 Processor(s) Installed.' },
+      { t: '                           [01]: Intel64 Family 6 Model 158 Stepping 9 GenuineIntel ~2904 Mhz' },
+      { t: 'BIOS Version:              Phoenix Technologies LTD 6.00, 7/29/2019' },
+      { t: 'Windows Directory:         C:\\Windows' },
+      { t: 'System Directory:          C:\\Windows\\system32' },
+      { t: 'Boot Device:               \\Device\\HarddiskVolume1' },
+      { t: 'System Locale:             en-us;English (United States)' },
+      { t: 'Input Locale:              en-us;English (United States)' },
+      { t: 'Time Zone:                 (UTC-08:00) Pacific Time (US & Canada)' },
+      { t: 'Total Physical Memory:     2,047 MB' },
+      { t: 'Available Physical Memory: 1,438 MB' },
+      { t: 'Virtual Memory: Max Size:  4,095 MB' },
+      { t: 'Virtual Memory: Available: 3,602 MB' },
+      { t: 'Virtual Memory: In Use:    493 MB' },
+      { t: 'Page File Location(s):     C:\\pagefile.sys' },
+      { t: 'Domain:                    WORKGROUP' },
+      { t: 'Logon Server:              \\\\DC01' },
+      { t: 'Hotfix(s):                 3 Hotfix(s) Installed.', cls: 'y' },
+      { t: '                           [01]: KB2479628' },
+      { t: '                           [02]: KB2491683' },
+      { t: '                           [03]: KB2506014' },
+      { t: 'Network Card(s):           1 NIC(s) Installed.' },
+      { t: '                           [01]: Intel(R) PRO/1000 MT Network Connection' },
+      { t: '                                 Connection Name: Local Area Connection' },
+      { t: '                                 DHCP Enabled:    No' },
+      { t: '                                 IP address(es)' },
+      { t: '                                 [01]: 10.10.10.10' },
+    ]};
+
+    if (cmd === 'ver') return { lines: [
+      { t: '' },
+      { t: 'Microsoft Windows [Version 6.1.7601]' },
+    ]};
+
+    if (cmd === 'wmic qfe list' || cmd === 'wmic qfe list brief' || cmd === 'wmic qfe') return { lines: [
+      { t: 'Caption                                     Description      HotFixID   InstalledBy           InstalledOn', cls: 'b' },
+      { t: 'http://support.microsoft.com/?kbid=2479628  Update           KB2479628  NT AUTHORITY\\SYSTEM   1/8/2024' },
+      { t: 'http://support.microsoft.com/?kbid=2491683  Security Update  KB2491683  NT AUTHORITY\\SYSTEM   1/8/2024' },
+      { t: 'http://support.microsoft.com/?kbid=2506014  Security Update  KB2506014  NT AUTHORITY\\SYSTEM   1/8/2024' },
+      { t: '' },
+      { t: '[!] Notably absent: KB4012212 (MS17-010 patch)', cls: 'y' },
+    ]};
+
+    if (/^wmic\s+os\s+get/i.test(cmd)) return { lines: [
+      { t: 'BuildNumber  Caption                            Version', cls: 'b' },
+      { t: '7601         Microsoft Windows 7 Ultimate       6.1.7601' },
+    ]};
+
+    if (cmd === 'arp -a') return { lines: [
+      { t: '' },
+      { t: 'Interface: 10.10.10.10 --- 0xb', cls: 'b' },
+      { t: '  Internet Address      Physical Address      Type' },
+      { t: '  10.10.10.1            00-50-56-c0-00-08     dynamic' },
+      { t: '  10.10.10.5            00-0c-29-3a-7f-2e     dynamic' },
+      { t: '  10.10.10.20           00-0c-29-1d-44-91     dynamic' },
+      { t: '  10.10.10.50           00-0c-29-9b-15-c8     dynamic' },
+      { t: '  10.10.10.255          ff-ff-ff-ff-ff-ff     static' },
+      { t: '  224.0.0.22            01-00-5e-00-00-16     static' },
+    ]};
+
+    if (cmd === 'route print') return { lines: [
+      { t: '===========================================================================', cls: 'd' },
+      { t: 'Interface List' },
+      { t: ' 11...00 0c 29 1d 44 91 ......Intel(R) PRO/1000 MT Network Connection' },
+      { t: '  1...........................Software Loopback Interface 1' },
+      { t: '===========================================================================', cls: 'd' },
+      { t: '' },
+      { t: 'IPv4 Route Table', cls: 'b' },
+      { t: '===========================================================================', cls: 'd' },
+      { t: 'Active Routes:' },
+      { t: 'Network Destination        Netmask          Gateway       Interface  Metric' },
+      { t: '          0.0.0.0          0.0.0.0       10.10.10.1     10.10.10.10     10' },
+      { t: '       10.10.10.0    255.255.255.0         On-link      10.10.10.10    266' },
+      { t: '      10.10.10.10  255.255.255.255         On-link      10.10.10.10    266' },
+      { t: '        127.0.0.0        255.0.0.0         On-link        127.0.0.1    306' },
+      { t: '===========================================================================', cls: 'd' },
+    ]};
+
+    if (cmd === 'netstat -ano' || cmd === 'netstat -an' || cmd === 'netstat') return { lines: [
+      { t: '' },
+      { t: 'Active Connections', cls: 'b' },
+      { t: '' },
+      { t: '  Proto  Local Address          Foreign Address        State           PID' },
+      { t: '  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING       824' },
+      { t: '  TCP    0.0.0.0:445            0.0.0.0:0              LISTENING       4', cls: 'y' },
+      { t: '  TCP    0.0.0.0:3389           0.0.0.0:0              LISTENING       1148' },
+      { t: '  TCP    0.0.0.0:5985           0.0.0.0:0              LISTENING       4' },
+      { t: '  TCP    0.0.0.0:49152          0.0.0.0:0              LISTENING       452' },
+      { t: '  TCP    0.0.0.0:49153          0.0.0.0:0              LISTENING       848' },
+      { t: '  TCP    10.10.10.10:139        0.0.0.0:0              LISTENING       4' },
+      { t: '  TCP    10.10.10.10:49158      10.10.20.5:4444        ESTABLISHED     1337', cls: 'g' },
+      { t: '  UDP    0.0.0.0:137            *:*                                    4' },
+      { t: '  UDP    0.0.0.0:138            *:*                                    4' },
+      { t: '  UDP    0.0.0.0:5355           *:*                                    1024' },
+    ]};
+
+    if (cmd === 'net view') return { lines: [
+      { t: 'Server Name            Remark', cls: 'b' },
+      { t: '-------------------------------------------------------------------------------', cls: 'd' },
+      { t: '\\\\DC01' },
+      { t: '\\\\WS-FINANCE-01' },
+      { t: '\\\\WS-HR-02' },
+      { t: '\\\\FILESERVER01' },
+      { t: 'The command completed successfully.', cls: 'g' },
+    ]};
+
+    if (cmd === 'net view /domain') return { lines: [
+      { t: 'Domain', cls: 'b' },
+      { t: '-------------------------------------------------------------------------------', cls: 'd' },
+      { t: 'CORP' },
+      { t: 'WORKGROUP' },
+      { t: 'The command completed successfully.', cls: 'g' },
+    ]};
+
+    if (cmd === 'net user /domain') return { lines: [
+      { t: 'User accounts for \\\\DC01.corp.local', cls: 'b' },
+      { t: '-------------------------------------------------------------------------------', cls: 'd' },
+      { t: 'Administrator            Guest                    krbtgt' },
+      { t: 'john.doe                 jane.smith               r.brown' },
+      { t: 'svc_backup               svc_sql                  svc_web' },
+      { t: 'svc_iis                  helpdesk                 it.admin' },
+      { t: 'The command completed successfully.', cls: 'g' },
+    ]};
+
+    if (/^net\s+group\s+"domain admins"\s+\/domain$/i.test(cmd)) return { lines: [
+      { t: 'Group name     Domain Admins', cls: 'b' },
+      { t: 'Comment        Designated administrators of the domain' },
+      { t: '' },
+      { t: 'Members', cls: 'b' },
+      { t: '-------------------------------------------------------------------------------', cls: 'd' },
+      { t: 'Administrator            it.admin                 svc_backup', cls: 'g' },
+      { t: 'The command completed successfully.', cls: 'g' },
+    ]};
+
+    if (/^net\s+group\s+"enterprise admins"\s+\/domain$/i.test(cmd)) return { lines: [
+      { t: 'Group name     Enterprise Admins', cls: 'b' },
+      { t: 'Comment        Designated administrators of the enterprise' },
+      { t: '' },
+      { t: 'Members', cls: 'b' },
+      { t: '-------------------------------------------------------------------------------', cls: 'd' },
+      { t: 'Administrator', cls: 'g' },
+      { t: 'The command completed successfully.', cls: 'g' },
+    ]};
+
+    if (cmd === 'nltest /domain_trusts') return { lines: [
+      { t: 'List of domain trusts:', cls: 'b' },
+      { t: '    0: CORP corp.local (NT 5) (Forest Tree Root) (Primary Domain) (Native)' },
+      { t: '    1: PARTNER partner.local (NT 5) (Forest: 1)' },
+      { t: 'The command completed successfully', cls: 'g' },
+    ]};
+
+    if (cmd === 'set') return { lines: [
+      { t: 'ALLUSERSPROFILE=C:\\ProgramData' },
+      { t: 'APPDATA=C:\\Users\\Administrator\\AppData\\Roaming' },
+      { t: 'COMPUTERNAME=DC01' },
+      { t: 'ComSpec=C:\\Windows\\system32\\cmd.exe' },
+      { t: 'HOMEDRIVE=C:' },
+      { t: 'HOMEPATH=\\Users\\Administrator' },
+      { t: 'LOGONSERVER=\\\\DC01', cls: 'y' },
+      { t: 'NUMBER_OF_PROCESSORS=1' },
+      { t: 'OS=Windows_NT' },
+      { t: 'Path=C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem' },
+      { t: 'PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC' },
+      { t: 'PROCESSOR_ARCHITECTURE=AMD64' },
+      { t: 'PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 158 Stepping 9, GenuineIntel' },
+      { t: 'PUBLIC=C:\\Users\\Public' },
+      { t: 'SystemDrive=C:' },
+      { t: 'SystemRoot=C:\\Windows' },
+      { t: 'TEMP=C:\\Users\\ADMINI~1\\AppData\\Local\\Temp' },
+      { t: 'USERDNSDOMAIN=CORP.LOCAL', cls: 'y' },
+      { t: 'USERDOMAIN=CORP', cls: 'y' },
+      { t: 'USERNAME=Administrator' },
+      { t: 'USERPROFILE=C:\\Users\\Administrator' },
+      { t: 'windir=C:\\Windows' },
+    ]};
+
+    if (cmd === 'tasklist') return { lines: [
+      { t: 'Image Name                     PID Session Name        Session#    Mem Usage', cls: 'b' },
+      { t: '========================= ======== ================ =========== ============', cls: 'd' },
+      { t: 'System Idle Process              0 Services                   0          4 K' },
+      { t: 'System                           4 Services                   0        268 K' },
+      { t: 'smss.exe                       272 Services                   0      1,068 K' },
+      { t: 'csrss.exe                      352 Services                   0      4,892 K' },
+      { t: 'wininit.exe                    412 Services                   0      3,920 K' },
+      { t: 'services.exe                   452 Services                   0      6,784 K' },
+      { t: 'lsass.exe                      460 Services                   0     11,236 K', cls: 'y' },
+      { t: 'svchost.exe                    824 Services                   0      9,012 K' },
+      { t: 'spoolsv.exe                    848 Services                   0      8,448 K' },
+      { t: 'explorer.exe                  1980 Console                    1     22,108 K' },
+      { t: 'cmd.exe                       1337 Services                   0      2,840 K', cls: 'g' },
+      { t: 'conhost.exe                   1338 Services                   0      4,212 K' },
+    ]};
+
+    if (cmd === 'tasklist /svc') return { lines: [
+      { t: 'Image Name                     PID Services', cls: 'b' },
+      { t: '========================= ======== ============================================', cls: 'd' },
+      { t: 'System Idle Process              0 N/A' },
+      { t: 'System                           4 N/A' },
+      { t: 'smss.exe                       272 N/A' },
+      { t: 'services.exe                   452 N/A' },
+      { t: 'lsass.exe                      460 KeyIso, SamSs, VaultSvc' },
+      { t: 'svchost.exe                    624 DcomLaunch, PlugPlay, Power' },
+      { t: 'svchost.exe                    688 RpcEptMapper, RpcSs' },
+      { t: 'svchost.exe                    824 Dhcp, EventLog, lmhosts' },
+      { t: 'svchost.exe                    900 LanmanServer, Schedule, SENS' },
+      { t: 'spoolsv.exe                    848 Spooler' },
+      { t: 'sqlservr.exe                  1148 MSSQLSERVER', cls: 'y' },
+      { t: 'cmd.exe                       1337 N/A' },
+    ]};
+
+    if (cmd === 'sc query') return { lines: [
+      { t: 'SERVICE_NAME: BFE', cls: 'b' },
+      { t: 'DISPLAY_NAME: Base Filtering Engine' },
+      { t: '        TYPE               : 20  WIN32_SHARE_PROCESS' },
+      { t: '        STATE              : 4  RUNNING' },
+      { t: '' },
+      { t: 'SERVICE_NAME: LanmanServer', cls: 'b' },
+      { t: 'DISPLAY_NAME: Server' },
+      { t: '        TYPE               : 20  WIN32_SHARE_PROCESS' },
+      { t: '        STATE              : 4  RUNNING' },
+      { t: '' },
+      { t: 'SERVICE_NAME: MSSQLSERVER', cls: 'b' },
+      { t: 'DISPLAY_NAME: SQL Server (MSSQLSERVER)' },
+      { t: '        TYPE               : 10  WIN32_OWN_PROCESS' },
+      { t: '        STATE              : 4  RUNNING' },
+      { t: '' },
+      { t: 'SERVICE_NAME: Spooler', cls: 'b' },
+      { t: 'DISPLAY_NAME: Print Spooler' },
+      { t: '        TYPE               : 110 WIN32_OWN_PROCESS  (interactive)' },
+      { t: '        STATE              : 4  RUNNING' },
+      { t: '' },
+      { t: 'SERVICE_NAME: TermService' },
+      { t: 'DISPLAY_NAME: Remote Desktop Services' },
+      { t: '        STATE              : 4  RUNNING' },
+    ]};
+
+    if (/^schtasks\s+\/query/i.test(cmd)) return { lines: [
+      { t: '' },
+      { t: 'Folder: \\', cls: 'b' },
+      { t: 'TaskName                                 Next Run Time          Status' },
+      { t: '======================================== ====================== ===============' },
+      { t: 'GoogleUpdateTaskMachineCore              1/16/2024 8:00:00 AM   Ready' },
+      { t: 'GoogleUpdateTaskMachineUA                1/15/2024 9:30:00 PM   Ready' },
+      { t: 'BackupJob_Nightly                        1/16/2024 2:00:00 AM   Ready', cls: 'y' },
+      { t: 'SystemSoundsService                      N/A                    Disabled' },
+    ]};
+
+    if (/^reg\s+query\s+.*currentversion\\?run/i.test(cmd)) return { lines: [
+      { t: '' },
+      { t: 'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\Run', cls: 'b' },
+      { t: '    VMware Tools    REG_SZ    "C:\\Program Files\\VMware\\VMware Tools\\vmtoolsd.exe" -n vmusr' },
+      { t: '    SecurityHealth  REG_SZ    %windir%\\system32\\SecurityHealthSystray.exe' },
+      { t: '    BackupAgent     REG_SZ    "C:\\Program Files\\BackupCo\\agent.exe" --user svc_backup --pwd Backup2024!', cls: 'y' },
+    ]};
+
+    if (cmd === 'cmdkey /list') return { lines: [
+      { t: '' },
+      { t: 'Currently stored credentials:', cls: 'b' },
+      { t: '' },
+      { t: '    Target: Domain:interactive=CORP\\svc_backup', cls: 'y' },
+      { t: '    Type: Domain Password' },
+      { t: '    User: CORP\\svc_backup' },
+      { t: '' },
+      { t: '    Target: LegacyGeneric:target=fileserver01.corp.local', cls: 'y' },
+      { t: '    Type: Generic' },
+      { t: '    User: CORP\\Administrator' },
+    ]};
+
+    if (/^findstr\s+/i.test(cmd)) {
+      // Match the classic password-grep idiom
+      if (/password/i.test(cmd)) return { lines: [
+        { t: 'C:\\inetpub\\wwwroot\\web.config:    <add key="DBPassword" value="Sql$erver2024!" />', cls: 'g' },
+        { t: 'C:\\Users\\Administrator\\Documents\\passwords_old.txt:Administrator: P@ssw0rd2022!', cls: 'g' },
+        { t: 'C:\\Program Files\\BackupCo\\config.ini:backup_password=Backup2024!', cls: 'g' },
+        { t: 'C:\\Users\\Administrator\\AppData\\Roaming\\notes.xml:    <password>Sup3rS3cret!</password>', cls: 'g' },
+      ]};
+      return { lines: [{ t: 'FINDSTR: No match found', cls: 'd' }] };
+    }
+
+    // ── procdump.exe — dump LSASS process memory ─────────────────────────────
+    if (/^procdump(\.exe)?\s.+lsass(\.exe)?/i.test(cmd)) {
+      const wantsAccept = /-accepteula/i.test(cmd);
+      const dumpPath = (cmd.match(/[Cc]:\\[^\s]+\.dmp/) || ['C:\\Windows\\Temp\\lsass.dmp'])[0];
+      const stepLines = [];
+      if (!wantsAccept) {
+        stepLines.push(
+          { t: '',                                                                                 delay: jitter(80, 30) },
+          { t: 'ProcDump v11.0 - Sysinternals process dump utility',                      cls: 'b', delay: jitter(15, 10) },
+          { t: 'Copyright (C) 2009-2022 Mark Russinovich and Andrew Richards',            cls: 'd', delay: jitter(15, 10) },
+          { t: 'Sysinternals - www.sysinternals.com',                                     cls: 'd', delay: jitter(15, 10) },
+          { t: '',                                                                                 delay: jitter(15, 10) },
+          { t: 'You have not accepted the Sysinternals license terms.',                   cls: 'r', delay: jitter(220, 60) },
+          { t: 'Use the -accepteula option to accept the EULA.',                          cls: 'y', delay: jitter(15, 10) },
+        );
+        return { stepLines };
+      }
+      stepLines.push(
+        { t: '',                                                                                   delay: jitter(80, 30) },
+        { t: 'ProcDump v11.0 - Sysinternals process dump utility',                        cls: 'b', delay: jitter(15, 10) },
+        { t: 'Copyright (C) 2009-2022 Mark Russinovich and Andrew Richards',              cls: 'd', delay: jitter(15, 10) },
+        { t: 'Sysinternals - www.sysinternals.com',                                       cls: 'd', delay: jitter(15, 10) },
+        { t: 'With contributions from Andrew Richards',                                   cls: 'd', delay: jitter(15, 10) },
+        { t: '',                                                                                   delay: jitter(420, 140) },
+        { t: '[19:42:11] Dump 1 initiated: ' + dumpPath,                                  cls: 'b', delay: jitter(680, 200) },
+        { t: '[19:42:14] Dump 1 writing: Estimated dump file size is 47 MB.',                      delay: jitter(2200, 600) },
+        { t: '[19:42:21] Dump 1 complete: 47 MB written in 6.8 seconds',                  cls: 'g', delay: jitter(6800, 1400) },
+        { t: '[19:42:21] Dump count reached.',                                            cls: 'g', delay: jitter(280, 80) },
+        { t: '',                                                                                   delay: jitter(50, 20) },
+      );
+      SIM.lsassDumped = true;
+      return { stepLines };
+    }
+
+    // ── rundll32 comsvcs.dll MiniDump (LOLBAS LSASS dump trick) ──────────────
+    if (/^rundll32(\.exe)?\s+.*comsvcs\.dll.*minidump/i.test(cmd)) {
+      const hasArgs = /minidump\s+\d+\s+\S+/i.test(cmd);
+      if (!hasArgs) {
+        return { stepLines: [
+          { t: 'Error: missing arguments. Usage: rundll32.exe C:\\Windows\\System32\\comsvcs.dll, MiniDump <PID> <OutputPath> full', cls: 'r', delay: jitter(120, 40) },
+        ]};
+      }
+      SIM.lsassDumped = true;
+      // comsvcs.dll MiniDump prints nothing on success — it writes the file and exits silently.
+      return { stepLines: [
+        { t: '', delay: jitter(2400, 800) },
+      ]};
+    }
+
+    // ── reg save HKLM\SAM / HKLM\SYSTEM (offline SAM dump) ───────────────────
+    if (/^reg\s+save\s+hklm\\(sam|system|security)\s+/i.test(cmd)) {
+      return { stepLines: [
+        { t: '',                                                                          delay: jitter(180, 60) },
+        { t: 'The operation completed successfully.',                            cls: 'g', delay: jitter(420, 140) },
+      ]};
+    }
+
+    // ── tasklist | findstr lsass (find PID before comsvcs trick) ─────────────
+    if (/^tasklist\s.*lsass/i.test(cmd) || /tasklist.*\|\s*findstr.*lsass/i.test(cmd)) {
+      return { stepLines: [
+        { t: 'lsass.exe                      460 Services                   0     11,236 K', cls: 'y', delay: jitter(120, 40) },
+      ]};
     }
 
     if (cmd === 'cls') return { clear: true };

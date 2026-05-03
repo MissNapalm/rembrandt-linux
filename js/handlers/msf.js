@@ -140,14 +140,22 @@ HANDLERS.push(
     }}],
   },
 
+  // ── msf: show options (no module loaded) ──────────────────────────────────
+  {
+    match: c => c === 'show options' && SIM.msf && !SIM.msfModule,
+    lines: [{ t: () => ({ openMsf: true, msfEcho:
+      '[-] No module selected. Use `use <module>` to load one (e.g. `use exploit/windows/smb/ms17_010_eternalblue`).'
+    })}],
+  },
+
   // ── msf: show options ─────────────────────────────────────────────────────
   {
-    match: c => c === 'show options' && SIM.msf,
+    match: c => c === 'show options' && SIM.msf && SIM.msfModule,
     lines: [{ t: () => {
-      const mod = SIM.msfModule || '';
+      const mod = SIM.msfModule;
       const opts = SIM.msfOpts[mod] || {};
       return { openMsf: true, msfEcho:
-        `Module options (${mod || 'none loaded'}):\n\n` +
+        `Module options (${mod}):\n\n` +
         `   Name           Current Setting  Required  Description\n` +
         `   ----           ---------------  --------  -----------\n` +
         `   RHOSTS         ${(opts.RHOSTS||'').padEnd(15)}  yes       The target host(s)\n` +

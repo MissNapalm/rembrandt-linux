@@ -5,10 +5,19 @@
   const titleScreen = document.getElementById('title-screen');
   const titlePlay   = document.getElementById('title-play');
   if (titlePlay && titleScreen) {
-    titlePlay.addEventListener('click', () => {
+    const dismissTitle = () => {
+      if (titleScreen.style.display === 'none') return;
       titleScreen.style.opacity = '0';
       titleScreen.style.transition = 'opacity 0.25s';
       setTimeout(() => { titleScreen.style.display = 'none'; }, 250);
+    };
+    titlePlay.addEventListener('click', dismissTitle);
+    document.addEventListener('keydown', e => {
+      if (titleScreen.style.display === 'none') return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        dismissTitle();
+      }
     });
   }
 

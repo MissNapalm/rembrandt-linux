@@ -4,8 +4,8 @@ const ETERNALBLUE_CHALLENGES = [
   {
     id: 1, title: 'Scan the target', pts: 150,
     flag: 'FLAG{ms17_010_eternalblue_confirmed}',
-    hint: 'sudo nmap -sC -sV 10.10.20.10',
-    explain: 'Recon first. We know there\'s a Windows 7 machine at 10.10.20.10 — now we knock on its door to see if it has the bug we\'re looking for.\n\nThe script we\'re running checks for MS17-010 — a 2017 flaw in Windows\'s file-sharing protocol (SMB). It\'s the same bug that powered WannaCry, the ransomware that took down the UK\'s NHS and 230,000 other machines in 150 countries.\n\nIf the scan reports State: VULNERABLE, the door is open.',
+    hint: 'sudo nmap -sC -sV 10.10.10.10',
+    explain: 'Recon first. We know there\'s a Windows 7 machine at 10.10.10.10 — now we knock on its door to see if it has the bug we\'re looking for.\n\nThe script we\'re running checks for MS17-010 — a 2017 flaw in Windows\'s file-sharing protocol (SMB). It\'s the same bug that powered WannaCry, the ransomware that took down the UK\'s NHS and 230,000 other machines in 150 countries.\n\nIf the scan reports State: VULNERABLE, the door is open.',
     done: false,
     check: r => r.id === 'nmap-eb-vuln',
   },
@@ -28,7 +28,7 @@ const ETERNALBLUE_CHALLENGES = [
   {
     id: 4, title: 'Aim it', pts: 150,
     flag: 'FLAG{rhosts_lhost_configured}',
-    hint: 'set RHOSTS 10.10.20.10\nset LHOST 10.10.20.5',
+    hint: 'set RHOSTS 10.10.10.10\nset LHOST 10.10.10.5',
     explain: 'Two settings before we fire:\n\nRHOSTS — the target. R for Remote.\nLHOST — your own IP, where the shell will phone home. L for Local.\n\nWhy phone home instead of us connecting in? Firewalls usually let outbound traffic out but block incoming. A reverse shell looks like normal outbound and slips past.',
     done: false,
     check: r => r.id === 'msf-set',
@@ -103,7 +103,7 @@ const CTF = {
     SIM.msfModule = null;
     SIM.msfOptions = {};
     SIM.meterpreter = false;
-    SIM.ebTarget = '10.10.20.10';
+    SIM.ebTarget = '10.10.10.10';
     SIM.user = 'rembrandt';
     SIM.cwd  = '/home/rembrandt';
     TERM_INSTANCES.forEach(t => {

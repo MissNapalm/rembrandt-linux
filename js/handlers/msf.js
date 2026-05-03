@@ -3,27 +3,6 @@
 HANDLERS.push(
   // ── Windows shell extras ──────────────────────────────────────────────────
 
-  // ── EternalBlue nmap discovery ────────────────────────────────────────────
-  {
-    id: 'nmap-eb-discovery',
-    loadTime: () => jitter(2800, 500),
-    match: c => /^nmap\b/.test(c) && (c.includes('20.0/24') || (c.includes('10.10.20') && c.includes('-sn'))),
-    lines: [
-      { t: 'Starting Nmap 7.94 ( https://nmap.org )' },
-      { t: '' },
-      { t: 'Nmap scan report for 10.10.20.1', cls: 'b' },
-      { t: 'Host is up (0.00042s latency).' },
-      { t: '' },
-      { t: 'Nmap scan report for 10.10.20.5', cls: 'b' },
-      { t: 'Host is up (0.000071s latency).' },
-      { t: '' },
-      { t: 'Nmap scan report for WIN7-PC (10.10.20.10)', cls: 'g' },
-      { t: 'Host is up (0.0021s latency).' },
-      { t: '' },
-      { t: 'Nmap done: 256 IP addresses (3 hosts up) scanned in 2.61 seconds', cls: 'g' },
-    ],
-  },
-
   // ── EternalBlue vuln scan ─────────────────────────────────────────────────
   {
     id: 'nmap-eb-vuln',
@@ -43,10 +22,10 @@ HANDLERS.push(
         { t: `SYN Stealth Scan Timing: About ${pct}% done; ETC: ${etcStr} (0:${String(remM).padStart(2,'0')}:${String(remS2).padStart(2,'0')} remaining)`, cls: 'd' },
       ];
     },
-    match: c => /^nmap\b/.test(c) && c.includes('10.10.20.10') && (c.includes('-sV') || c.includes('--script')),
+    match: c => /^nmap\b/.test(c) && c.includes('10.10.10.10') && (c.includes('-sV') || c.includes('--script')),
     lines: [
       { t: () => 'Starting Nmap 7.94 ( https://nmap.org ) at ' + new Date().toUTCString().slice(0,16) },
-      { t: 'Nmap scan report for WIN7-PC (10.10.20.10)' },
+      { t: 'Nmap scan report for WIN7-PC (10.10.10.10)' },
       { t: 'Host is up (0.0021s latency).' },
       { t: 'Not shown: 997 closed tcp ports (reset)' },
       { t: 'PORT      STATE SERVICE            VERSION' },
@@ -111,7 +90,7 @@ HANDLERS.push(
     after: () => {
       SIM.msf = true;
       SIM.msfModule = null;
-      SIM.msfOpts['__global__'] = { LHOST: '10.10.20.5' };
+      SIM.msfOpts['__global__'] = { LHOST: '10.10.10.5' };
     },
   },
 
@@ -189,9 +168,9 @@ HANDLERS.push(
   // ── msf: run / exploit — wrong RHOSTS (host unreachable) ──────────────────
   {
     id: 'msf-run-wrong-rhosts',
-    match: c => (c === 'run' || c === 'exploit') && SIM.msf && SIM.msfModule && SIM.msfModule.includes('ms17_010') && !!(SIM.msfOpts[SIM.msfModule]?.RHOSTS) && SIM.msfOpts[SIM.msfModule].RHOSTS !== '10.10.20.10',
+    match: c => (c === 'run' || c === 'exploit') && SIM.msf && SIM.msfModule && SIM.msfModule.includes('ms17_010') && !!(SIM.msfOpts[SIM.msfModule]?.RHOSTS) && SIM.msfOpts[SIM.msfModule].RHOSTS !== '10.10.10.10',
     stepLines: [
-      { t: () => `[*] Started reverse TCP handler on ${SIM.msfOpts[SIM.msfModule]?.LHOST || '10.10.20.5'}:4444`, cls: 'b', delay: 0 },
+      { t: () => `[*] Started reverse TCP handler on ${SIM.msfOpts[SIM.msfModule]?.LHOST || '10.10.10.5'}:4444`, cls: 'b', delay: 0 },
       { t: () => `[*] ${SIM.msfOpts[SIM.msfModule].RHOSTS}:445 - Using auxiliary/scanner/smb/smb_ms17_010 as check`, cls: 'b', delay: jitter(600, 200) },
       { t: () => `[*] ${SIM.msfOpts[SIM.msfModule].RHOSTS}:445 - Connecting to target for exploitation.`, cls: 'b', delay: jitter(900, 300) },
       { t: () => `[-] ${SIM.msfOpts[SIM.msfModule].RHOSTS}:445 - Rex::ConnectionTimeout: The connection timed out (${SIM.msfOpts[SIM.msfModule].RHOSTS}:445).`, cls: 'r', delay: jitter(2200, 600) },
@@ -200,7 +179,7 @@ HANDLERS.push(
       { t: () => `[-] ${SIM.msfOpts[SIM.msfModule].RHOSTS}:445 - Exploit aborted due to failure: unreachable: The target is not responding.`, cls: 'r', delay: jitter(300, 100) },
       { t: '[*] Exploit completed, but no session was created.', cls: 'y', delay: jitter(200, 80) },
       { t: '', delay: jitter(150, 50) },
-      { t: '[sim] Hint: the vulnerable Windows 7 box is at 10.10.20.10. Check your RHOSTS.', cls: 'y', delay: jitter(80, 30) },
+      { t: '[sim] Hint: the vulnerable Windows 7 box is at 10.10.10.10. Check your RHOSTS.', cls: 'y', delay: jitter(80, 30) },
     ],
     lines: [],
   },
@@ -208,30 +187,30 @@ HANDLERS.push(
   // ── msf: run / exploit ────────────────────────────────────────────────────
   {
     id: 'msf-run',
-    match: c => (c === 'run' || c === 'exploit') && SIM.msf && SIM.msfModule && SIM.msfModule.includes('ms17_010') && SIM.msfOpts[SIM.msfModule]?.RHOSTS === '10.10.20.10',
+    match: c => (c === 'run' || c === 'exploit') && SIM.msf && SIM.msfModule && SIM.msfModule.includes('ms17_010') && SIM.msfOpts[SIM.msfModule]?.RHOSTS === '10.10.10.10',
     stepLines: [
-      { t: '[*] Started reverse TCP handler on 10.10.20.5:4444',                          cls: 'b', delay: 0 },
+      { t: '[*] Started reverse TCP handler on 10.10.10.5:4444',                          cls: 'b', delay: 0 },
 
-      { t: '[*] 10.10.20.10:445 - Using auxiliary/scanner/smb/smb_ms17_010 as check',      cls: 'b', delay: jitter(700, 300) },
-      { t: '[+] 10.10.20.10:445 - Host is likely VULNERABLE to MS17-010! - Windows 7 Ultimate 7601 Service Pack 1 x64 (64-bit)', cls: 'g', delay: jitter(15, 10) },
-      { t: '[*] 10.10.20.10:445 - Connecting to target for exploitation.',                 cls: 'b', delay: jitter(15, 10) },
-      { t: '[+] 10.10.20.10:445 - Connection established for exploitation.',               cls: 'g', delay: jitter(1100, 400) },
-      { t: '[+] 10.10.20.10:445 - Target OS selected valid for OS indicated by SMB reply', cls: 'g', delay: jitter(1300, 400) },
-      { t: '[*] 10.10.20.10:445 - Trying exploit with 12 Groom Allocations.',              cls: 'b', delay: jitter(15, 10) },
-      { t: '[*] 10.10.20.10:445 - Starting non-paged pool grooming',                       cls: 'b', delay: jitter(15, 10) },
-      { t: '[+] 10.10.20.10:445 - Sending SMBv2 buffers',                                  cls: 'g', delay: jitter(600, 200) },
-      { t: '[*] 10.10.20.10:445 - Sending final SMBv2 buffers.',                           cls: 'b', delay: jitter(800, 300) },
-      { t: '[*] 10.10.20.10:445 - Receiving response from exploit packet',                 cls: 'b', delay: jitter(1100, 400) },
-      { t: '[+] 10.10.20.10:445 - ETERNALBLUE overwrite completed successfully (0xC000000D)!', cls: 'g', delay: jitter(15, 10) },
-      { t: '[*] 10.10.20.10:445 - Triggering free of corrupted buffer.',                   cls: 'b', delay: jitter(700, 250) },
-      { t: '[*] Sending stage (200774 bytes) to 10.10.20.10',                              cls: 'b', delay: jitter(15, 10) },
-      { t: '[*] Meterpreter session 1 opened (10.10.20.5:4444 -> 10.10.20.10:49158)',      cls: 'g', delay: jitter(1900, 500) },
+      { t: '[*] 10.10.10.10:445 - Using auxiliary/scanner/smb/smb_ms17_010 as check',      cls: 'b', delay: jitter(700, 300) },
+      { t: '[+] 10.10.10.10:445 - Host is likely VULNERABLE to MS17-010! - Windows 7 Ultimate 7601 Service Pack 1 x64 (64-bit)', cls: 'g', delay: jitter(15, 10) },
+      { t: '[*] 10.10.10.10:445 - Connecting to target for exploitation.',                 cls: 'b', delay: jitter(15, 10) },
+      { t: '[+] 10.10.10.10:445 - Connection established for exploitation.',               cls: 'g', delay: jitter(1100, 400) },
+      { t: '[+] 10.10.10.10:445 - Target OS selected valid for OS indicated by SMB reply', cls: 'g', delay: jitter(1300, 400) },
+      { t: '[*] 10.10.10.10:445 - Trying exploit with 12 Groom Allocations.',              cls: 'b', delay: jitter(15, 10) },
+      { t: '[*] 10.10.10.10:445 - Starting non-paged pool grooming',                       cls: 'b', delay: jitter(15, 10) },
+      { t: '[+] 10.10.10.10:445 - Sending SMBv2 buffers',                                  cls: 'g', delay: jitter(600, 200) },
+      { t: '[*] 10.10.10.10:445 - Sending final SMBv2 buffers.',                           cls: 'b', delay: jitter(800, 300) },
+      { t: '[*] 10.10.10.10:445 - Receiving response from exploit packet',                 cls: 'b', delay: jitter(1100, 400) },
+      { t: '[+] 10.10.10.10:445 - ETERNALBLUE overwrite completed successfully (0xC000000D)!', cls: 'g', delay: jitter(15, 10) },
+      { t: '[*] 10.10.10.10:445 - Triggering free of corrupted buffer.',                   cls: 'b', delay: jitter(700, 250) },
+      { t: '[*] Sending stage (200774 bytes) to 10.10.10.10',                              cls: 'b', delay: jitter(15, 10) },
+      { t: '[*] Meterpreter session 1 opened (10.10.10.5:4444 -> 10.10.10.10:49158)',      cls: 'g', delay: jitter(1900, 500) },
       { t: '',                                                                              delay: jitter(80, 40) },
     ],
     lines: [],
     after: () => {
       SIM.legacyPwned = true; SIM.msfMeter = true; SIM.msfMeterId = 1;
-      SIM.msfSessions = [{ id: 1, type: 'meterpreter', host: '10.10.20.10' }];
+      SIM.msfSessions = [{ id: 1, type: 'meterpreter', host: '10.10.10.10' }];
       window.dispatchEvent(new CustomEvent('hacklet:compromised'));
     },
   },
@@ -606,7 +585,7 @@ HANDLERS.push(
         { t: '[!] Example: run post/windows/manage/persistence_exe OPTION=value [...]',          cls: 'y', delay: jitter(15, 10) },
         { t: '[*] Running Persistence Script',                                                   cls: 'b', delay: jitter(420, 140) },
         { t: '[*] Resource file for cleanup created at /root/.msf4/logs/persistence/WIN7-PC_20240115.4823/WIN7-PC_20240115.4823.rc', cls: 'b', delay: jitter(280, 90) },
-        { t: '[*] Creating Payload=windows/meterpreter/reverse_tcp LHOST=10.10.20.5 LPORT=4444', cls: 'b', delay: jitter(900, 280) },
+        { t: '[*] Creating Payload=windows/meterpreter/reverse_tcp LHOST=10.10.10.5 LPORT=4444', cls: 'b', delay: jitter(900, 280) },
         { t: '[+] Persistent agent script is 99629 bytes long',                                  cls: 'g', delay: jitter(1100, 320) },
         { t: '[+] Persistent Script written to C:\\Windows\\Temp\\' + vbsName + '.vbs',           cls: 'g', delay: jitter(680, 200) },
         { t: '[*] Executing script C:\\Windows\\Temp\\' + vbsName + '.vbs',                       cls: 'b', delay: jitter(420, 140) },
@@ -653,7 +632,7 @@ HANDLERS.push(
         '===============\n\n' +
         '  Id  Name  Type                     Information                   Connection\n' +
         '  --  ----  ----                     -----------                   ----------\n' +
-        `  1         meterpreter x64/windows  NT AUTHORITY\\SYSTEM @ WIN7-PC  10.10.20.5:4444 -> 10.10.20.10:49158`
+        `  1         meterpreter x64/windows  NT AUTHORITY\\SYSTEM @ WIN7-PC  10.10.10.5:4444 -> 10.10.10.10:49158`
       };
     }}],
   },

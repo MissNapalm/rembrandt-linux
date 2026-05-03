@@ -10,7 +10,7 @@ The lab simulates a small corporate network:
 - **10.10.10.10** — DC01.CORP.LOCAL — the Active Directory domain controller
 - **10.10.10.20** — Windows workstation
 - **10.10.10.50** — Linux web/file server
-- **10.10.20.10** — legacy Windows 7 box (the EternalBlue target)
+- **10.10.10.10** — legacy Windows 7 box (the EternalBlue target)
 
 Recon goes outward in layers: yourself, your box, your network, each host you
 find, and finally the services on those hosts.
@@ -207,7 +207,7 @@ If you suspect a different subnet (say, after pivoting), sweep that
 too:
 
 ```
-sudo nmap -sn 10.10.20.0/24
+sudo nmap -sn 10.10.10.0/24
 ```
 
 The 20.x subnet has the legacy Windows 7 EternalBlue target.
@@ -325,12 +325,12 @@ smbclient -L //10.10.10.50 -N
 ftp 10.10.10.50
 ```
 
-### The legacy Windows 7 box: 10.10.20.10
+### The legacy Windows 7 box: 10.10.10.10
 
 This is the EternalBlue target.
 
 ```
-sudo nmap -sC -sV 10.10.20.10
+sudo nmap -sC -sV 10.10.10.10
 ```
 
 `-sC` runs the default NSE script set, which includes `smb-vuln-*`. If
@@ -607,9 +607,9 @@ journalctl -n 50; dmesg
 
 # Network
 sudo nmap -sn 10.10.10.0/24
-sudo nmap -sn 10.10.20.0/24
+sudo nmap -sn 10.10.10.0/24
 sudo nmap -sC -sV 10.10.10.10
-sudo nmap -sC -sV 10.10.20.10
+sudo nmap -sC -sV 10.10.10.10
 traceroute 10.10.10.10
 dig @10.10.10.10 corp.local ANY
 

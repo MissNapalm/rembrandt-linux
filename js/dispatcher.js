@@ -311,7 +311,7 @@ function runCommand(rawInput) {
       { t: '  TCP    0.0.0.0:49152          0.0.0.0:0              LISTENING       452' },
       { t: '  TCP    0.0.0.0:49153          0.0.0.0:0              LISTENING       848' },
       { t: '  TCP    10.10.10.10:139        0.0.0.0:0              LISTENING       4' },
-      { t: '  TCP    10.10.10.10:49158      10.10.20.5:4444        ESTABLISHED     1337', cls: 'g' },
+      { t: '  TCP    10.10.10.10:49158      10.10.10.5:4444        ESTABLISHED     1337', cls: 'g' },
       { t: '  UDP    0.0.0.0:137            *:*                                    4' },
       { t: '  UDP    0.0.0.0:138            *:*                                    4' },
       { t: '  UDP    0.0.0.0:5355           *:*                                    1024' },
@@ -626,7 +626,7 @@ function runCommand(rawInput) {
       SIM.msfMeter = false;
       SIM.msfMeterId = null;
       SIM.msfSessions = [];
-      return { openMsf: true, msfEcho: '[*] Shutting down Meterpreter...\n\n[*] 10.10.20.5 - Meterpreter session 1 closed.  Reason: User exit' };
+      return { openMsf: true, msfEcho: '[*] Shutting down Meterpreter...\n\n[*] 10.10.10.5 - Meterpreter session 1 closed.  Reason: User exit' };
     }
     // Valid meterpreter built-in commands
     if (cmd === 'whoami' || cmd === 'getuid') {
@@ -698,9 +698,9 @@ function runCommand(rawInput) {
         'Name         : Intel(R) PRO/1000 MT Network Connection',
         'Hardware MAC : 00:0c:29:3a:bc:de',
         'MTU          : 1500',
-        'IPv4 Address : 10.10.20.10',
+        'IPv4 Address : 10.10.10.10',
         'IPv4 Netmask : 255.255.255.0',
-        'IPv4 Gateway : 10.10.20.1',
+        'IPv4 Gateway : 10.10.10.1',
       ].join('\n') };
     }
     // Block everything else that isn't a real meterpreter command

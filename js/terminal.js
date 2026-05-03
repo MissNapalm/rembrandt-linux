@@ -26,6 +26,7 @@ function createTerminal() {
     // per-tab shell state (shadows SIM for isolation between tabs)
     _user: null,
     _cwd: null,
+    _isRoot: false,
     _windowsShell: false,
     _winCwd: 'C:\\Windows\\system32',
 
@@ -33,6 +34,7 @@ function createTerminal() {
     _simPush() {
       if (this._user !== null) SIM.user = this._user;
       if (this._cwd  !== null) SIM.cwd  = this._cwd;
+      if (this._isRoot !== undefined) SIM.isRoot = this._isRoot;
       SIM.windowsShell = this._windowsShell;
       SIM.winCwd       = this._winCwd;
       if (this._msfMeterWin !== undefined) SIM.msfMeterWin = this._msfMeterWin;
@@ -41,6 +43,7 @@ function createTerminal() {
     _simPull() {
       this._user         = SIM.user;
       this._cwd          = SIM.cwd;
+      this._isRoot       = SIM.isRoot;
       this._windowsShell = SIM.windowsShell;
       this._winCwd       = SIM.winCwd;
       this._msfMeterWin  = SIM.msfMeterWin;
@@ -152,10 +155,11 @@ function createTerminal() {
     _atomicClearAndPrompt() {
       // Build the full prompt string and write everything atomically in one call
       // so there is zero visible intermediate state between clear and prompt
-      const user  = this._user || SIM.user;
-      const home  = user === 'root' ? '/root' : '/home/' + user;
+      const elevated = !!SIM.isRoot;
+      const user  = elevated ? 'root' : (this._user || SIM.user);
+      const home  = elevated ? '/root' : '/home/' + user;
       const cwd   = (this._cwd || SIM.cwd) === home ? '~' : (this._cwd || SIM.cwd);
-      const sigil = user === 'root' ? '#' : '$';
+      const sigil = elevated ? '#' : '$';
       let prompt;
       if (this._windowsShell) {
         prompt = '\x1b[33m' + this._winCwd + '>\x1b[0m ';
@@ -194,10 +198,11 @@ function createTerminal() {
         }
         return;
       }
-      const user  = this._user || SIM.user;
-      const home  = user === 'root' ? '/root' : '/home/' + user;
+      const elevated = !!SIM.isRoot;
+      const user  = elevated ? 'root' : (this._user || SIM.user);
+      const home  = elevated ? '/root' : '/home/' + user;
       const cwd   = (this._cwd || SIM.cwd) === home ? '~' : (this._cwd || SIM.cwd);
-      const sigil = user === 'root' ? '#' : '$';
+      const sigil = elevated ? '#' : '$';
       this._xterm.writeln(
         '\x1b[35m┌──(\x1b[0m\x1b[32m' + user + '@rembrandt\x1b[0m' +
         '\x1b[35m)-[\x1b[0m\x1b[94m' + cwd + '\x1b[0m\x1b[35m]\x1b[0m'
@@ -923,11 +928,9 @@ function createTerminal() {
       }
 
       if (result.dropRoot) {
-        const registeredUser = localStorage.getItem('hacklet_user') || 'rembrandt';
-        this._user = registeredUser;
-        this._cwd  = '/home/' + registeredUser;
-        SIM.user = registeredUser;
-        SIM.cwd  = this._cwd;
+        SIM.isRoot = false;
+        SIM.cwd = '/home/' + SIM.user;
+        this._cwd = SIM.cwd;
         this._writePrompt();
         return;
       }
@@ -1025,11 +1028,11 @@ function createTerminal() {
     async _runSudoCmd(pendingCmd) {
       this._sudoPendingCmd = null; this._inputBuf = '';
       this._simPush();
-      const wasRoot = SIM.user === 'root';
-      if (!wasRoot) SIM.user = 'root';
+      const wasRoot = SIM.isRoot;
+      if (!wasRoot) SIM.isRoot = true;
       const result = runCommand(pendingCmd);
       const permanentRoot = /^(-i$|-s\s*$|su(\s|$))/.test(pendingCmd.trim());
-      if (!wasRoot && !permanentRoot) SIM.user = this._user || 'rembrandt';
+      if (!wasRoot && !permanentRoot) SIM.isRoot = false;
       this._simPull();
       if (!result) { this._writePrompt(); return; }
       if (result.clear) { this._atomicClearAndPrompt(); return; }

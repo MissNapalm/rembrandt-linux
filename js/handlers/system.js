@@ -947,7 +947,7 @@ HANDLERS.push(
         `Change: 2024-01-15 12:09:01.000000000 -0500`,
         ` Birth: 2024-01-10 08:00:00.000000000 -0500`,
       ].join('\n');
-      const uid = SIM.user === 'root' ? '0/    root' : '1000/    ' + SIM.user;
+      const uid = isRoot() ? '0/    root' : '1000/    ' + SIM.user;
       return [
         `  File: ${name}`,
         `  Size: 248\t\tBlocks: 8\t IO Block: 4096   regular file`,

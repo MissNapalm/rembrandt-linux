@@ -37,7 +37,7 @@ HANDLERS.push(
     lines: [
       { t: 'SHELL=/bin/bash' },
       { t: () => `USER=${SIM.user}` },
-      { t: () => `HOME=${SIM.user === 'root' ? '/root' : ('/home/' + SIM.user)}` },
+      { t: () => `HOME=${isRoot() ? '/root' : ('/home/' + SIM.user)}` },
       { t: 'TERM=xterm-256color' },
       { t: 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' },
       { t: 'LANG=en_US.UTF-8' },
@@ -54,7 +54,7 @@ HANDLERS.push(
     lines: [{ t: (cmd) => {
       const showHidden = cmd.includes('-a') || cmd.includes('-la') || cmd.includes('-al');
       const longFmt    = cmd.includes('-l') || cmd.includes('-la') || cmd.includes('-al');
-      const home = SIM.user === 'root' ? '/root' : ('/home/' + SIM.user);
+      const home = isRoot() ? '/root' : ('/home/' + SIM.user);
       const cwd  = SIM.cwd;
 
       // dirs: set of names that are directories
@@ -283,16 +283,20 @@ HANDLERS.push(
     lines: [{ t: (cmd) => {
       const arg = cmd.replace(/^cat\s+/, '').trim();
       const abs = arg.startsWith('/') ? arg : SIM.cwd.replace(/\/?$/, '/') + arg;
+      // Privilege-gated paths
+      if (!isRoot() && (abs === '/etc/shadow' || abs.startsWith('/root') || abs === '/etc/sudoers' || abs === '/etc/gshadow')) {
+        return `cat: ${arg}: Permission denied`;
+      }
       const files = simFiles();
-      // Try exact, then with /root/ prefix
-      const content = files[abs] || files['/root/' + arg] || files[arg];
+      const content = files[abs] || files[arg];
       if (content !== undefined) return content;
       return `cat: ${arg}: No such file or directory`;
     }, cls: (cmd) => {
       const arg = cmd.replace(/^cat\s+/, '').trim();
-      const files = simFiles();
       const abs = arg.startsWith('/') ? arg : SIM.cwd.replace(/\/?$/, '/') + arg;
-      return (files[abs] || files['/root/'+arg] || files[arg]) !== undefined ? '' : 'r';
+      if (!isRoot() && (abs === '/etc/shadow' || abs.startsWith('/root') || abs === '/etc/sudoers' || abs === '/etc/gshadow')) return 'r';
+      const files = simFiles();
+      return (files[abs] || files[arg]) !== undefined ? '' : 'r';
     }}],
     event: (cmd) => cmd.includes('notes') ? 'cat-notes' : null,
   },
@@ -301,7 +305,7 @@ HANDLERS.push(
   {
     match: c => /^cd(\s|$)/.test(c),
     lines: [{ t: (cmd) => {
-      const home = SIM.user === 'root' ? '/root' : ('/home/' + SIM.user);
+      const home = isRoot() ? '/root' : ('/home/' + SIM.user);
       let arg = cmd.replace(/^cd\s*/, '').trim() || home;
       if (arg === '~') arg = home;
       else if (arg.startsWith('~/')) arg = home + arg.slice(1);
@@ -312,7 +316,7 @@ HANDLERS.push(
       else if (arg === '-') target = home;
       else if (arg.startsWith('/')) target = arg;
       else target = (SIM.cwd === '/' ? '' : SIM.cwd) + '/' + arg;
-      if (SIM.user !== 'root' && (target === '/root' || target.startsWith('/root/'))) {
+      if (!isRoot() && (target === '/root' || target.startsWith('/root/'))) {
         return `bash: cd: ${arg}: Permission denied`;
       }
       // Case-sensitive existence check against known paths

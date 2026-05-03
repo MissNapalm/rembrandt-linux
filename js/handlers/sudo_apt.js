@@ -34,7 +34,7 @@ HANDLERS.push(
     match: c => c === '-i' || c === 'su' || c === 'su -' || c === '-s /bin/bash',
     loadTime: () => jitter(800, 200),
     lines: [],   // prompt change only
-    after: (c) => { SIM.user = 'root'; if (c === '-i' || c === 'su -') SIM.cwd = '/root'; },
+    after: (c) => { SIM.isRoot = true; if (c === '-i' || c === 'su -') SIM.cwd = '/root'; },
   },
 
   // ── doom (easter egg) ─────────────────────────────────────────────────────

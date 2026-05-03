@@ -747,7 +747,7 @@ function runCommand(rawInput) {
       SIM.msf = false; SIM.msfModule = null; SIM.msfMeter = false; SIM.msfMeterWin = false;
       return { lines: [{ t: '' }] };
     }
-    if (SIM.user === 'root') return { dropRoot: true };
+    if (SIM.isRoot) return { dropRoot: true };
     return { lines: [{ t: 'There is no job to resume.', cls: 'd' }] };
   }
 

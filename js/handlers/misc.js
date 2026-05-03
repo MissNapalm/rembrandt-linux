@@ -21,7 +21,7 @@ HANDLERS.push(
     match: c => /^crontab(\s|$)/.test(c),
     lines: [{ t: (cmd) => {
       if (cmd.includes('-l')) {
-        if (SIM.user === 'root') return [
+        if (isRoot()) return [
           '# root crontab',
           '*/5 * * * * /usr/local/bin/backup.sh',
           '0 2 * * * /usr/bin/find /tmp -mtime +7 -delete',
@@ -40,7 +40,7 @@ HANDLERS.push(
   {
     match: c => /^sudo\s+-l/.test(c),
     lines: [{ t: () => {
-      if (SIM.user === 'root') return 'User root may run the following commands on rembrandt:\n    (ALL : ALL) ALL';
+      if (isRoot()) return 'User root may run the following commands on rembrandt:\n    (ALL : ALL) ALL';
       return [
         'Matching Defaults entries for ' + SIM.user + ' on rembrandt:',
         '    env_reset, mail_badpass, secure_path=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',

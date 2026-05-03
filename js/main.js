@@ -512,7 +512,7 @@
 
   // ── File manager window ───────────────────────────────────────────────────
   function openFileManagerWindow() {
-    const startPath = SIM.user === 'root' ? '/root' : '/home/' + SIM.user;
+    const startPath = isRoot() ? '/root' : '/home/' + SIM.user;
 
     const win = createWindow('Files', 800, 520, `
       <div class="fm-window">
@@ -563,7 +563,7 @@
     }
 
     function navigate(path) {
-      if (isRootOnly(path) && SIM.user !== 'root') {
+      if (isRootOnly(path) && !isRoot()) {
         contentArea.innerHTML = `
           <div class="fm-perm-denied">
             <i class="fa fa-lock fm-lock-icon"></i>

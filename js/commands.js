@@ -2959,7 +2959,7 @@ const HANDLERS = [
   // ── msfconsole ───────────────────────────────────────────────────────────────────────────
   {
     id: 'msfconsole',
-    match: c => c === 'msfconsole' || c === 'msfconsole -q',
+    match: c => (c === 'msfconsole' || c === 'msfconsole -q') && !SIM.msf,
     stepLines: [
       { t: '\x1b[90m[*] Starting the Metasploit Framework console...\x1b[0m', delay: 0 },
       { t: '\x1b[90m[*] Checking for updates...\x1b[0m', delay: jitter(400, 100) },
@@ -3061,10 +3061,23 @@ const HANDLERS = [
     })}],
   },
 
+  // ── msf: run / exploit — wrong RHOSTS (host unreachable) ──────────────────
+  {
+    id: 'msf-run-wrong-rhosts',
+    match: c => (c === 'run' || c === 'exploit') && SIM.msf && SIM.msfModule && SIM.msfModule.includes('ms17_010') && !!(SIM.msfOpts[SIM.msfModule]?.RHOSTS) && SIM.msfOpts[SIM.msfModule].RHOSTS !== '10.10.20.10',
+    stepLines: [
+      { t: () => `[*] Started reverse TCP handler on ${SIM.msfOpts[SIM.msfModule]?.LHOST || '10.10.20.5'}:4444`, cls: 'b', delay: 0 },
+      { t: () => `[*] ${SIM.msfOpts[SIM.msfModule].RHOSTS}:445 - Connecting to target for exploitation.`, cls: 'b', delay: jitter(800, 600) },
+      { t: () => `[-] ${SIM.msfOpts[SIM.msfModule].RHOSTS}:445 - Rex::ConnectionTimeout: The connection timed out (${SIM.msfOpts[SIM.msfModule].RHOSTS}:445).`, cls: 'r', delay: jitter(2500, 800) },
+      { t: '[*] Exploit completed, but no session was created.', cls: 'y', delay: jitter(300, 100) },
+    ],
+    lines: [],
+  },
+
   // ── msf: run / exploit ────────────────────────────────────────────────────
   {
     id: 'msf-run',
-    match: c => (c === 'run' || c === 'exploit') && SIM.msf && SIM.msfModule && SIM.msfModule.includes('ms17_010') && !!(SIM.msfOpts[SIM.msfModule]?.RHOSTS),
+    match: c => (c === 'run' || c === 'exploit') && SIM.msf && SIM.msfModule && SIM.msfModule.includes('ms17_010') && SIM.msfOpts[SIM.msfModule]?.RHOSTS === '10.10.20.10',
     stepLines: [
       { t: '[*] Started reverse TCP handler on 10.10.20.5:4444',                          cls: 'b', delay: 0 },
       { t: '[*] 10.10.20.10:445 - Connecting to target for exploitation.',                 cls: 'b', delay: jitter(800, 650) },
@@ -3087,6 +3100,7 @@ const HANDLERS = [
       { t: '[*] 10.10.20.10:445 - Triggering free of corrupted buffer.',                   cls: 'b', delay: jitter(500, 420) },
       { t: '[*] Sending stage (200774 bytes) to 10.10.20.10',                              cls: 'b', delay: jitter(1100, 800) },
       { t: '[*] Meterpreter session 1 opened (10.10.20.5:4444 -> 10.10.20.10:49158)',      cls: 'g', delay: jitter(4000, 800) },
+      { t: '',                                                                              delay: jitter(80, 40) },
     ],
     lines: [],
     after: () => { SIM.legacyPwned = true; SIM.msfMeter = true; SIM.msfMeterId = 1; SIM.msfSessions = [{ id: 1, type: 'meterpreter', host: '10.10.20.10' }]; },
@@ -3503,9 +3517,9 @@ function runCommand(rawInput) {
       return { lines: out };
     }
 
-    // ── type ─────────────────────────────────────────────────────────────────
-    if (/^type\s/i.test(cmd)) {
-      const f = cmd.replace(/^type\s+/i, '').trim().toLowerCase();
+    // ── type / cat (Linux alias) ─────────────────────────────────────────────
+    if (/^(type|cat)\s/i.test(cmd)) {
+      const f = cmd.replace(/^(type|cat)\s+/i, '').trim().toLowerCase();
       if (f.includes('root.txt')) {
         SIM.lootExfiltrated = true;
         return { id: 'loot-exfil', lines: [
@@ -3559,6 +3573,19 @@ function runCommand(rawInput) {
   }
 
   if (cmd === 'clear') return { clear: true };
+
+  // ── msfconsole prompt — reject anything that isn't a known msf verb ───────
+  if (SIM.msf && !SIM.msfMeter && !SIM.msfMeterWin) {
+    const verb = cmd.split(' ')[0].toLowerCase();
+    const knownMsfVerbs = new Set([
+      'use','set','setg','unset','unsetg','show','run','exploit','check',
+      'sessions','search','info','back','exit','quit','help','?','banner',
+      'version','save','get','getg','spool','jobs','load','reload','clear',
+    ]);
+    if (!knownMsfVerbs.has(verb)) {
+      return { lines: [{ t: `[-] Unknown command: ${verb}.`, cls: 'r' }] };
+    }
+  }
 
   // ── Meterpreter shell mode ────────────────────────────────────────────────
   if (SIM.msf && SIM.msfMeter && !SIM.msfMeterWin) {

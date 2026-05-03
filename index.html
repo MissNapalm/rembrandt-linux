@@ -297,47 +297,47 @@
           <div style="font-size:42px;text-align:center;margin-bottom:10px">🖼️</div>
           <div style="font-size:17px;font-weight:700;color:#1e293b;margin-bottom:12px;text-align:center;letter-spacing:-0.01em">Rembrandt isn't a VM…<br>it's a museum exhibit.</div>
           <p style="font-size:13px;color:#475569;line-height:1.75">
-            Every command is <strong style="color:#7c3aed">curated</strong>. Every byte of output is hand-painted from real pentest engagements, then frozen mid-stroke for you to walk up and study.
+            A <strong style="color:#7c3aed">simulated Linux environment</strong> running entirely in your browser. Real tools, real attack chains, real output — zero setup, zero risk.
           </p>
           <p style="font-size:13px;color:#475569;line-height:1.75;margin-top:10px">
-            <code style="color:#7c3aed">nmap</code>, <code style="color:#7c3aed">crackmapexec</code>, <code style="color:#7c3aed">impacket</code>, <code style="color:#7c3aed">metasploit</code> — they all respond exactly like the real thing, because the gallery was built from the real thing. Walk the floor, follow the rope line, watch how a breach actually unfolds.
+            Run <code style="color:#7c3aed">nmap</code>, <code style="color:#7c3aed">msfconsole</code>, and <code style="color:#7c3aed">meterpreter</code> against a vulnerable Windows target. Everything responds like the real thing — because it was built from real pentest output.
           </p>
-          <p style="font-size:12px;color:#94a3b8;margin-top:12px;font-style:italic;text-align:center">No VMs. No installs. No network traffic. Just the artwork.</p>
+          <p style="font-size:12px;color:#94a3b8;margin-top:12px;font-style:italic;text-align:center">No VMs. No installs. No network traffic. Just hacking.</p>
         </div>
 
-        <!-- Slide 2: The labs -->
+        <!-- Slide 2: The lab -->
         <div class="wc-slide" style="padding:32px 36px 24px;display:none">
           <div style="font-size:36px;margin-bottom:14px">🎯</div>
-          <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:14px">Two Exhibits On The Floor</div>
-          <div style="display:flex;flex-direction:column;gap:12px">
-            <div class="wc-fact"><span class="wc-pill" style="background:#ede9fe;color:#6d28d9">Lab 1</span> <div><strong style="color:#1e293b">Kerberoasting</strong> — From one open port to Domain Admin. Enumerate users, roast service tickets offline, crack them with Hashcat, dump <code>NTDS.dit</code>, become SYSTEM on the DC. 11 steps · 3050 pts.</div></div>
-            <div class="wc-fact"><span class="wc-pill" style="background:#fee2e2;color:#b91c1c">Lab 2</span> <div><strong style="color:#1e293b">EternalBlue</strong> — The exploit that broke the world. WannaCry, NotPetya, the NHS — all of it ran on this code. One packet, no credentials, SYSTEM shell. 9 steps · 1950 pts.</div></div>
-          </div>
-          <p style="font-size:12px;color:#94a3b8;margin-top:12px">More exhibits in the works. Switch between them in the CTF panel →</p>
+          <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:14px">The Lab: EternalBlue</div>
+          <p style="font-size:13px;color:#475569;line-height:1.75">
+            Exploit <strong style="color:#1e293b">MS17-010</strong> — the NSA-discovered SMB vulnerability that powered <strong style="color:#b91c1c">WannaCry</strong> and <strong style="color:#b91c1c">NotPetya</strong>. One packet, no credentials, full SYSTEM shell.
+          </p>
+          <p style="font-size:13px;color:#475569;line-height:1.75;margin-top:10px">
+            Walk through the full attack chain end-to-end: scan → confirm vulnerable → load exploit → catch shell → loot the filesystem. <strong style="color:#7c3aed">8 steps · 1700 pts.</strong>
+          </p>
         </div>
 
         <!-- Slide 3: The network -->
         <div class="wc-slide" style="padding:32px 36px 24px;display:none">
           <div style="font-size:36px;margin-bottom:14px">🌐</div>
-          <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:14px">The Network On Display</div>
+          <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:14px">The Simulated Network</div>
           <div style="display:flex;flex-direction:column;gap:10px">
-            <div class="wc-fact"><span class="wc-pill">10.10.10.5</span> <div><strong style="color:#1e293b">rembrandt</strong> — your attack box. Kali under the hood, you behind the keyboard.</div></div>
-            <div class="wc-fact"><span class="wc-pill" style="background:#fef9c3;color:#854d0e">10.10.10.10</span> <div><strong style="color:#1e293b">DC01.CORP.LOCAL</strong> — Windows Server 2019 DC. Kerberos, LDAP, SMB all answer. The crown jewel.</div></div>
-            <div class="wc-fact"><span class="wc-pill" style="background:#fee2e2;color:#b91c1c">10.10.10.50</span> <div><strong style="color:#1e293b">LEGACY</strong> — Windows 7 SP1, unpatched since 2017. The kind of box still humming in real corporate networks.</div></div>
-            <div class="wc-fact"><span class="wc-pill" style="background:#dcfce7;color:#15803d">10.10.20.x</span> <div>EternalBlue lab subnet — its own corner of the gallery.</div></div>
+            <div class="wc-fact"><span class="wc-pill">10.10.20.5</span> <div><strong style="color:#1e293b">rembrandt</strong> — your attack box. Kali under the hood, you behind the keyboard.</div></div>
+            <div class="wc-fact"><span class="wc-pill" style="background:#fee2e2;color:#b91c1c">10.10.20.10</span> <div><strong style="color:#1e293b">WIN7-PC</strong> — Windows 7 SP1, unpatched. The kind of box still humming in real corporate networks.</div></div>
+            <div class="wc-fact"><span class="wc-pill" style="background:#dcfce7;color:#15803d">10.10.20.0/24</span> <div>The lab subnet — discover hosts with a ping sweep before you scan.</div></div>
           </div>
         </div>
 
         <!-- Slide 4: Tips -->
         <div class="wc-slide" style="padding:32px 36px 24px;display:none">
           <div style="font-size:36px;margin-bottom:14px">⚡</div>
-          <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:14px">Before You Step Inside</div>
+          <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:14px">Things worth knowing</div>
           <div style="display:flex;flex-direction:column;gap:10px">
             <div class="wc-fact"><span class="wc-pill" style="background:#dcfce7;color:#15803d">TAB</span> <div>Autocompletes commands and paths. Works like bash.</div></div>
             <div class="wc-fact"><span class="wc-pill" style="background:#dcfce7;color:#15803d">↑↓</span> <div>Scrolls command history.</div></div>
-            <div class="wc-fact"><span class="wc-pill" style="background:#dcfce7;color:#15803d">ℹ️</span> <div>Click any CTF step for a plain-English deep dive on what it does and why it works.</div></div>
+            <div class="wc-fact"><span class="wc-pill" style="background:#dcfce7;color:#15803d">ℹ️</span> <div>Click any CTF step for a plain-English explanation of what it does and why.</div></div>
             <div class="wc-fact"><span class="wc-pill" style="background:#dcfce7;color:#15803d">copy</span> <div>Hit copy on any step to paste the command straight into the terminal.</div></div>
-            <div class="wc-fact"><span class="wc-pill" style="background:#fee2e2;color:#b91c1c">reset</span> <div>Wipes the session. Or try <code>rm -rf / --no-preserve-root</code> — see what the curator does.</div></div>
+            <div class="wc-fact"><span class="wc-pill" style="background:#fee2e2;color:#b91c1c">reset</span> <div>Type <code>reset</code> to wipe the session.</div></div>
           </div>
         </div>
 

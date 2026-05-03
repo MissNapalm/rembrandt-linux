@@ -442,19 +442,6 @@
     return map[path] !== undefined ? map[path] : null;
   }
 
-  function fmGetFileContent(path) {
-    const extras = SIM.hashesOnDisk ? {
-      '/home/rembrandt/hashes.kerberoast': KRB5_HASHES,
-      '/root/hashes.kerberoast': KRB5_HASHES,
-    } : {};
-    const all = {
-      ...SIM.files,
-      ...extras,
-      '/usr/share/wordlists/rockyou.txt': '# rockyou.txt — 14,341,564 passwords\n[file truncated for display]\npassword\n123456\npassword1\nPassword1!\nBackup2023!\nletmein\nqwerty\n...',
-    };
-    return all[path] !== undefined ? all[path] : null;
-  }
-
   // ── File manager window ───────────────────────────────────────────────────
   function openFileManagerWindow() {
     const startPath = SIM.user === 'root' ? '/root' : '/home/' + SIM.user;
@@ -575,8 +562,7 @@
             const child = path === '/' ? '/' + item.name : path + '/' + item.name;
             navigate(child);
           } else {
-            const filePath = path === '/' ? '/' + item.name : path + '/' + item.name;
-            openFile(filePath, item.name);
+            openFile(item.name);
           }
         });
         grid.appendChild(el);
@@ -585,23 +571,18 @@
       contentArea.appendChild(grid);
     }
 
-    function openFile(filePath, name) {
-      const content = fmGetFileContent(filePath);
-      if (content === null) {
-        contentArea.innerHTML = '<div class="fm-empty"><i class="fa fa-ban"></i> Cannot read file</div>';
-        return;
-      }
+    function openFile(name) {
       contentArea.innerHTML = `
-        <div class="fm-file-view">
-          <div class="fm-file-header">
-            <button class="fm-btn fm-file-back" title="Back to folder"><i class="fa fa-arrow-left"></i></button>
-            <span class="fm-file-icon-sm">${fmIconSm(name)}</span>
-            <span class="fm-file-title">${esc(name)}</span>
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+                    height:100%;gap:10px;padding:32px;font-family:'Ubuntu',sans-serif;text-align:center">
+          <div style="color:#ca8a04;font-size:13px">
+            <span style="font-weight:600">[sim]</span> Opening files in the GUI isn't wired up in this lab.
           </div>
-          <pre class="fm-file-content">${esc(content)}</pre>
+          <div style="color:#94a3b8;font-size:12px;line-height:1.6">
+            Use the terminal — try <code style="background:#f1f5f9;color:#7c3aed;padding:1px 6px;border-radius:3px;font-family:'Courier New',monospace">cat ${esc(name)}</code> instead.
+          </div>
         </div>
       `;
-      contentArea.querySelector('.fm-file-back').addEventListener('click', render);
     }
 
     function fmIcon(item) {
@@ -620,12 +601,6 @@
       if (item.name.endsWith('.txt')) return '<span class="fm-icon-emoji">📝</span>';
       if (item.name === 'rockyou.txt')  return '<span class="fm-icon-emoji">📋</span>';
       return '<span class="fm-icon-emoji">📄</span>';
-    }
-
-    function fmIconSm(name) {
-      if (name.endsWith('.kerberoast')) return '🔑';
-      if (name.endsWith('.txt'))        return '📝';
-      return '📄';
     }
 
     function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }

@@ -209,12 +209,15 @@ const CTF = {
     document.getElementById('ctf-explain-text').textContent  = ch.explain;
     document.getElementById('ctf-explain-hint').textContent  = ch.hint;
     const copyBtn = document.getElementById('ctf-explain-copy');
-    copyBtn.onclick = () => {
+    const cmdBox  = document.getElementById('ctf-explain-cmd');
+    const pasteAndClose = () => {
       CTF._pasteToTerminal(ch.hint.split('\n')[0]);
       copyBtn.innerHTML = '<i class="fa fa-check"></i> Pasted';
       setTimeout(() => { copyBtn.innerHTML = '<i class="fa fa-copy"></i> Copy'; }, 1500);
       document.getElementById('ctf-explain-modal').classList.add('hidden');
     };
+    copyBtn.onclick = e => { e.stopPropagation(); pasteAndClose(); };
+    cmdBox.onclick = pasteAndClose;
     document.getElementById('ctf-explain-modal').classList.remove('hidden');
   },
 

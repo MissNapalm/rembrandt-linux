@@ -299,6 +299,25 @@
     }
   }
 
+  // ── DOOM easter egg ───────────────────────────────────────────────────────
+  window._openDoom = function() {
+    const W = 800, H = 540;
+    const body =
+      '<div style="position:relative;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center">' +
+        '<div style="position:absolute;color:#9ca3af;font-family:\'Courier New\',monospace;font-size:13px;text-align:center;line-height:1.7;pointer-events:none">' +
+          '<div style="color:#dc2626;font-weight:700;letter-spacing:2px;margin-bottom:8px">LOADING DOOM…</div>' +
+          'click the screen, then press ENTER<br>arrow keys move · CTRL fires · SPACE opens doors' +
+        '</div>' +
+        '<iframe src="https://archive.org/embed/msdos_DOOM_1993" ' +
+          'style="position:relative;width:100%;height:100%;border:0;background:transparent;z-index:1" ' +
+          'allowfullscreen allow="autoplay; fullscreen; gamepad"></iframe>' +
+      '</div>';
+    const win = createWindow('DOOM — knee-deep in the dead', W, H, body);
+    win.style.left = Math.max(20, (window.innerWidth - W) / 2) + 'px';
+    win.style.top  = Math.max(20, (window.innerHeight - H) / 2) + 'px';
+    addTaskbarBtn(win, '👹 DOOM');
+  };
+
   function openTerminalWindow() {
     _termCount++;
     const label = _termCount === 1 ? '>_ Terminal' : `>_ Terminal ${_termCount}`;

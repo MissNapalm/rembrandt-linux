@@ -127,6 +127,22 @@ const HANDLERS = [
     after: (c) => { SIM.user = 'root'; if (c === '-i' || c === 'su -') SIM.cwd = '/root'; },
   },
 
+  // ── doom (easter egg) ─────────────────────────────────────────────────────
+  {
+    id: 'doom',
+    match: c => /^doom\s*$/i.test(c),
+    lines: [
+      { t: '       ▄▄▄▄    ▄▄▄▄▄    ▄▄▄▄    ▄▄    ▄▄', cls: 'r' },
+      { t: '       ██  ██  ██  ██  ██  ██  ███▄▄███', cls: 'r' },
+      { t: '       ██  ██  ██  ██  ██  ██  ██ ██ ██', cls: 'r' },
+      { t: '       ██████  ██████  ██████  ██    ██', cls: 'r' },
+      { t: '' },
+      { t: 'Knee-Deep in the Dead — loading shareware WAD...', cls: 'y' },
+      { t: 'Hint: click the window, then press ENTER to start. Arrow keys + Ctrl to fire.', cls: 'd' },
+    ],
+    after: () => { if (typeof window._openDoom === 'function') window._openDoom(); },
+  },
+
   // ── apt / apt-get ─────────────────────────────────────────────────────────
   {
     match: c => /^apt(-get)?\s+update/.test(c),
@@ -2976,8 +2992,8 @@ const HANDLERS = [
       { t: '', delay: 0 },
       { t: '\x1b[90m       =[ \x1b[0m\x1b[1;31mmetasploit v6.3.44-dev\x1b[0m\x1b[90m                          ]\x1b[0m', delay: 0 },
       { t: '\x1b[90m+ -- --=[ \x1b[0m2374 exploits - 1232 auxiliary - 413 post\x1b[90m       ]\x1b[0m', delay: 0 },
-      { t: '\x1b[90m+ -- --=[ \x1b[0m1171 payloads - 46 encoders - 11 nops\x1b[90m         ]\x1b[0m', delay: 0 },
-      { t: '\x1b[90m+ -- --=[ \x1b[0m9 evasion\x1b[90m                                      ]\x1b[0m', delay: 0 },
+      { t: '\x1b[90m+ -- --=[ \x1b[0m1171 payloads - 46 encoders - 11 nops\x1b[90m           ]\x1b[0m', delay: 0 },
+      { t: '\x1b[90m+ -- --=[ \x1b[0m9 evasion\x1b[90m                                       ]\x1b[0m', delay: 0 },
       { t: '', delay: 0 },
       { t: '\x1b[90m       Metasploit tip: \x1b[0mUse \x1b[33msearch\x1b[0m to find modules by name or CVE', delay: 0 },
       { t: '', delay: jitter(80, 30) },
@@ -3087,32 +3103,26 @@ const HANDLERS = [
     stepLines: [
       { t: '[*] Started reverse TCP handler on 10.10.20.5:4444',                          cls: 'b', delay: 0 },
 
-      { t: '[*] 10.10.20.10:445 - Using auxiliary/scanner/smb/smb_ms17_010 as check',      cls: 'b', delay: jitter(600, 200) },
-      { t: '[+] 10.10.20.10:445 - Host is likely VULNERABLE to MS17-010! - Windows 7 Ultimate 7601 Service Pack 1 x64 (64-bit)', cls: 'g', delay: 0 },
-      { t: '[*] 10.10.20.10:445 - Scanned 1 of 1 hosts (100% complete)',                   cls: 'b', delay: 0 },
-
-      { t: '[*] 10.10.20.10:445 - Connecting to target for exploitation.',                 cls: 'b', delay: jitter(700, 250) },
-      { t: '[+] 10.10.20.10:445 - Connection established for exploitation.',               cls: 'g', delay: 0 },
-      { t: '[+] 10.10.20.10:445 - Target OS selected valid for OS indicated by SMB reply', cls: 'g', delay: 0 },
-      { t: '[+] 10.10.20.10:445 - Target arch selected valid for arch indicated by DCE/RPC reply', cls: 'g', delay: 0 },
-
-      { t: '[*] 10.10.20.10:445 - Trying exploit with 12 Groom Allocations.',              cls: 'b', delay: jitter(800, 300) },
-      { t: '[*] 10.10.20.10:445 - Sending all but last fragment of exploit packet',        cls: 'b', delay: 0 },
-      { t: '[*] 10.10.20.10:445 - Starting non-paged pool grooming',                       cls: 'b', delay: 0 },
-      { t: '[+] 10.10.20.10:445 - Sending SMBv2 buffers',                                  cls: 'g', delay: 0 },
-
-      { t: '[+] 10.10.20.10:445 - Closing SMBv1 connection creating free hole adjacent to SMBv2 buffer.', cls: 'g', delay: jitter(700, 250) },
-      { t: '[*] 10.10.20.10:445 - Sending final SMBv2 buffers.',                           cls: 'b', delay: 0 },
-      { t: '[*] 10.10.20.10:445 - Sending last fragment of exploit packet!',               cls: 'b', delay: 0 },
-      { t: '[*] 10.10.20.10:445 - Receiving response from exploit packet',                 cls: 'b', delay: 0 },
-
-      { t: '[+] 10.10.20.10:445 - ETERNALBLUE overwrite completed successfully (0xC000000D)!', cls: 'g', delay: jitter(750, 250) },
-      { t: '[*] 10.10.20.10:445 - Sending egg to corrupted connection.',                   cls: 'b', delay: 0 },
-      { t: '[*] 10.10.20.10:445 - Triggering free of corrupted buffer.',                   cls: 'b', delay: 0 },
-      { t: '[+] 10.10.20.10:445 - Successfully exploited target!',                         cls: 'g', delay: 0 },
-
-      { t: '[*] Sending stage (200774 bytes) to 10.10.20.10',                              cls: 'b', delay: jitter(900, 300) },
-      { t: '[*] Meterpreter session 1 opened (10.10.20.5:4444 -> 10.10.20.10:49158)',      cls: 'g', delay: jitter(2800, 600) },
+      { t: '[*] 10.10.20.10:445 - Using auxiliary/scanner/smb/smb_ms17_010 as check',      cls: 'b', delay: jitter(1100, 500) },
+      { t: '[+] 10.10.20.10:445 - Host is likely VULNERABLE to MS17-010! - Windows 7 Ultimate 7601 Service Pack 1 x64 (64-bit)', cls: 'g', delay: jitter(15, 10) },
+      { t: '[*] 10.10.20.10:445 - Scanned 1 of 1 hosts (100% complete)',                   cls: 'b', delay: jitter(15, 10) },
+      { t: '[*] 10.10.20.10:445 - Connecting to target for exploitation.',                 cls: 'b', delay: jitter(15, 10) },
+      { t: '[+] 10.10.20.10:445 - Connection established for exploitation.',               cls: 'g', delay: jitter(1700, 600) },
+      { t: '[+] 10.10.20.10:445 - Target OS selected valid for OS indicated by SMB reply', cls: 'g', delay: jitter(2300, 700) },
+      { t: '[+] 10.10.20.10:445 - Target arch selected valid for arch indicated by DCE/RPC reply', cls: 'g', delay: jitter(15, 10) },
+      { t: '[*] 10.10.20.10:445 - Trying exploit with 12 Groom Allocations.',              cls: 'b', delay: jitter(15, 10) },
+      { t: '[*] 10.10.20.10:445 - Sending all but last fragment of exploit packet',        cls: 'b', delay: jitter(15, 10) },
+      { t: '[*] 10.10.20.10:445 - Starting non-paged pool grooming',                       cls: 'b', delay: jitter(15, 10) },
+      { t: '[+] 10.10.20.10:445 - Sending SMBv2 buffers',                                  cls: 'g', delay: jitter(950, 400) },
+      { t: '[+] 10.10.20.10:445 - Closing SMBv1 connection creating free hole adjacent to SMBv2 buffer.', cls: 'g', delay: jitter(15, 10) },
+      { t: '[*] 10.10.20.10:445 - Sending final SMBv2 buffers.',                           cls: 'b', delay: jitter(1400, 500) },
+      { t: '[*] 10.10.20.10:445 - Sending last fragment of exploit packet!',               cls: 'b', delay: jitter(15, 10) },
+      { t: '[*] 10.10.20.10:445 - Receiving response from exploit packet',                 cls: 'b', delay: jitter(1900, 700) },
+      { t: '[+] 10.10.20.10:445 - ETERNALBLUE overwrite completed successfully (0xC000000D)!', cls: 'g', delay: jitter(15, 10) },
+      { t: '[*] 10.10.20.10:445 - Sending egg to corrupted connection.',                   cls: 'b', delay: jitter(15, 10) },
+      { t: '[*] 10.10.20.10:445 - Triggering free of corrupted buffer.',                   cls: 'b', delay: jitter(1100, 400) },
+      { t: '[*] Sending stage (200774 bytes) to 10.10.20.10',                              cls: 'b', delay: jitter(15, 10) },
+      { t: '[*] Meterpreter session 1 opened (10.10.20.5:4444 -> 10.10.20.10:49158)',      cls: 'g', delay: jitter(3000, 1000) },
       { t: '',                                                                              delay: jitter(80, 40) },
     ],
     lines: [],

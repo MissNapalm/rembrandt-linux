@@ -130,6 +130,54 @@
       document.getElementById('ctf-toggle-btn').classList.toggle('active-btn', isOpen);
     });
 
+    // ── Cheatsheet button — toggles tabbed modal ────────────────────────
+    const cheatsheetBtn   = document.getElementById('cheatsheet-toggle-btn');
+    const cheatsheetModal = document.getElementById('cheatsheet-modal');
+    const cheatsheetClose = document.getElementById('cheatsheet-close');
+
+    cheatsheetBtn.addEventListener('click', () => {
+      cheatsheetModal.classList.toggle('hidden');
+    });
+    cheatsheetClose.addEventListener('click', () => {
+      cheatsheetModal.classList.add('hidden');
+    });
+    cheatsheetModal.addEventListener('click', e => {
+      if (e.target === cheatsheetModal) cheatsheetModal.classList.add('hidden');
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !cheatsheetModal.classList.contains('hidden')) {
+        cheatsheetModal.classList.add('hidden');
+      }
+    });
+
+    // Click any command span -> paste into terminal and close modal
+    cheatsheetModal.addEventListener('click', e => {
+      const span = e.target.closest('.text-violet-400');
+      if (!span || !cheatsheetModal.contains(span)) return;
+      const cmd = span.textContent.trim();
+      if (!cmd) return;
+      if (typeof CTF !== 'undefined' && CTF._pasteToTerminal) CTF._pasteToTerminal(cmd);
+      cheatsheetModal.classList.add('hidden');
+    });
+
+    // Tab switching
+    cheatsheetModal.querySelectorAll('.cs-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        cheatsheetModal.querySelectorAll('.cs-tab').forEach(t => {
+          const active = t.dataset.tab === target;
+          t.classList.toggle('cs-tab-active', active);
+          t.classList.toggle('border-emerald-400', active);
+          t.classList.toggle('text-emerald-300', active);
+          t.classList.toggle('border-transparent', !active);
+          t.classList.toggle('text-slate-400', !active);
+        });
+        cheatsheetModal.querySelectorAll('.cs-pane').forEach(p => {
+          p.classList.toggle('hidden', p.dataset.pane !== target);
+        });
+      });
+    });
+
     document.getElementById('fp-close').addEventListener('click', () => {
       document.getElementById('flag-popup').classList.add('hidden');
     });

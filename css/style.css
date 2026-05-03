@@ -362,3 +362,16 @@ button { cursor: pointer; font-family: inherit; }
 }
 .am-action-btn:hover { background: #f1f5f9; color: #475569; }
 .am-action-btn-red:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
+
+/* Cheatsheet — clickable command spans */
+#cheatsheet-modal .text-violet-400 {
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin: 0 -2px;
+  transition: background 0.1s, color 0.1s;
+}
+#cheatsheet-modal .text-violet-400:hover {
+  background: rgba(167, 139, 250, 0.15);
+  color: #c4b5fd !important;
+}

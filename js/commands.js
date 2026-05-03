@@ -17,6 +17,7 @@ const SIM = {
   msfMeter: false,      // in meterpreter
   msfMeterId: null,     // active session id
   msfMeterWin: false,   // in windows shell from meterpreter
+  msfLastSearch: [],    // module names from the last `search` (for `use <n>`)
   legacyPwned: false,   // EternalBlue succeeded
   files: {
     '/home/rembrandt/notes.txt': `# Notes - DO NOT SHARE
@@ -2918,41 +2919,57 @@ const HANDLERS = [
       ];
     },
     match: c => /^nmap\b/.test(c) && c.includes('smb-vuln') && c.includes('10.10.20.10'),
-    lines: [
-      { t: () => 'Starting Nmap 7.94 ( https://nmap.org ) at ' + new Date().toUTCString().slice(0,16) },
-      { t: 'Nmap scan report for WIN7-PC (10.10.20.10)' },
-      { t: 'Host is up (0.0021s latency).' },
-      { t: 'Not shown: 997 closed tcp ports (reset)' },
-      { t: 'PORT      STATE SERVICE            VERSION' },
-      { t: '135/tcp   open  msrpc              Microsoft Windows RPC', cls: 'g' },
-      { t: '139/tcp   open  netbios-ssn        Microsoft Windows netbios-ssn', cls: 'g' },
-      { t: '445/tcp   open  microsoft-ds       Windows 7 Ultimate 7601 Service Pack 1 microsoft-ds (workgroup: WORKGROUP)', cls: 'r' },
-      { t: '3389/tcp  open  ssl/ms-wbt-server  Microsoft Terminal Services', cls: 'y' },
-      { t: '' },
-      { t: 'Host script results:' },
-      { t: '|_clock-skew: mean: 1h20m00s, deviation: 2h18m34s, median: 0s' },
-      { t: '| smb-security-mode:' },
-      { t: '|   account_used: guest' },
-      { t: '|   authentication_level: user' },
-      { t: '|   challenge_response: supported' },
-      { t: '|_  message_signing: disabled (dangerous, but default)', cls: 'r' },
-      { t: '| smb-vuln-ms17-010: ', cls: 'r' },
-      { t: '|   VULNERABLE:', cls: 'r' },
-      { t: '|   Remote Code Execution vulnerability in Microsoft SMBv1 servers (ms17-010)', cls: 'r' },
-      { t: '|     State: VULNERABLE', cls: 'r' },
-      { t: '|     IDs:  CVE:CVE-2017-0143', cls: 'r' },
-      { t: '|     Risk factor: HIGH', cls: 'r' },
-      { t: '|       A critical remote code execution vulnerability exists in Microsoft SMBv1', cls: 'r' },
-      { t: '|       servers (ms17-010).', cls: 'r' },
-      { t: '|     Disclosure date: 2017-03-14', cls: 'd' },
-      { t: '|     References:', cls: 'd' },
-      { t: '|       https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-0143', cls: 'd' },
-      { t: '|_      https://technet.microsoft.com/en-us/library/security/ms17-010.aspx', cls: 'd' },
-      { t: '' },
-      { t: 'Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows' },
-      { t: '' },
-      { t: () => 'Nmap done: 1 IP address (1 host up) scanned in ' + (7.2 + Math.random()).toFixed(2) + ' seconds', cls: 'g' },
+    stepLines: [
+      { t: () => 'Starting Nmap 7.94 ( https://nmap.org ) at ' + new Date().toUTCString().slice(0,16), delay: 0 },
+      { t: '\x1b[90mNSE: Loaded 156 scripts for scanning.\x1b[0m', cls: 'd', delay: jitter(900, 200) },
+      { t: '\x1b[90mNSE: Script Pre-scanning.\x1b[0m', cls: 'd', delay: jitter(700, 150) },
+      { t: '\x1b[90mInitiating SYN Stealth Scan at ' + new Date().toLocaleTimeString() + '\x1b[0m', cls: 'd', delay: jitter(800, 200) },
+      { t: '\x1b[90mScanning WIN7-PC (10.10.20.10) [1000 ports]\x1b[0m', cls: 'd', delay: jitter(600, 150) },
+      { t: '\x1b[90mDiscovered open port 445/tcp on 10.10.20.10\x1b[0m', cls: 'd', delay: jitter(1100, 300) },
+      { t: '\x1b[90mDiscovered open port 139/tcp on 10.10.20.10\x1b[0m', cls: 'd', delay: jitter(700, 200) },
+      { t: '\x1b[90mDiscovered open port 135/tcp on 10.10.20.10\x1b[0m', cls: 'd', delay: jitter(600, 200) },
+      { t: '\x1b[90mDiscovered open port 3389/tcp on 10.10.20.10\x1b[0m', cls: 'd', delay: jitter(900, 250) },
+      { t: '\x1b[90mCompleted SYN Stealth Scan, ' + (4.1 + Math.random()).toFixed(2) + 's elapsed (1000 total ports)\x1b[0m', cls: 'd', delay: jitter(1400, 300) },
+      { t: '\x1b[90mNSE: Script scanning 10.10.20.10.\x1b[0m', cls: 'd', delay: jitter(900, 200) },
+      { t: '\x1b[90mInitiating NSE at ' + new Date().toLocaleTimeString() + '\x1b[0m', cls: 'd', delay: jitter(700, 200) },
+      { t: '\x1b[90mNSE Timing: About 36.00% done; ETC: ' + new Date(Date.now()+8000).toLocaleTimeString() + ' (0:00:08 remaining)\x1b[0m', cls: 'd', delay: jitter(2200, 400) },
+      { t: '\x1b[90mNSE Timing: About 78.00% done; ETC: ' + new Date(Date.now()+3000).toLocaleTimeString() + ' (0:00:03 remaining)\x1b[0m', cls: 'd', delay: jitter(2400, 400) },
+      { t: '\x1b[90mCompleted NSE at ' + new Date().toLocaleTimeString() + ', ' + (6.4 + Math.random()).toFixed(2) + 's elapsed\x1b[0m', cls: 'd', delay: jitter(1800, 300) },
+      { t: '', delay: 200 },
+      { t: 'Nmap scan report for WIN7-PC (10.10.20.10)', delay: jitter(500, 100) },
+      { t: 'Host is up (0.0021s latency).', delay: jitter(300, 80) },
+      { t: 'Not shown: 997 closed tcp ports (reset)', delay: jitter(300, 80) },
+      { t: 'PORT      STATE SERVICE            VERSION', delay: jitter(300, 80) },
+      { t: '135/tcp   open  msrpc              Microsoft Windows RPC', cls: 'g', delay: jitter(250, 60) },
+      { t: '139/tcp   open  netbios-ssn        Microsoft Windows netbios-ssn', cls: 'g', delay: jitter(250, 60) },
+      { t: '445/tcp   open  microsoft-ds       Windows 7 Ultimate 7601 Service Pack 1 microsoft-ds (workgroup: WORKGROUP)', cls: 'r', delay: jitter(250, 60) },
+      { t: '3389/tcp  open  ssl/ms-wbt-server  Microsoft Terminal Services', cls: 'y', delay: jitter(250, 60) },
+      { t: '', delay: 150 },
+      { t: 'Host script results:', delay: jitter(400, 100) },
+      { t: '|_clock-skew: mean: 1h20m00s, deviation: 2h18m34s, median: 0s', delay: jitter(300, 80) },
+      { t: '| smb-security-mode:', delay: jitter(250, 80) },
+      { t: '|   account_used: guest', delay: 80 },
+      { t: '|   authentication_level: user', delay: 80 },
+      { t: '|   challenge_response: supported', delay: 80 },
+      { t: '|_  message_signing: disabled (dangerous, but default)', cls: 'r', delay: 100 },
+      { t: '| smb-vuln-ms17-010: ', cls: 'r', delay: jitter(600, 150) },
+      { t: '|   VULNERABLE:', cls: 'r', delay: jitter(400, 100) },
+      { t: '|   Remote Code Execution vulnerability in Microsoft SMBv1 servers (ms17-010)', cls: 'r', delay: jitter(350, 80) },
+      { t: '|     State: VULNERABLE', cls: 'r', delay: 200 },
+      { t: '|     IDs:  CVE:CVE-2017-0143', cls: 'r', delay: 150 },
+      { t: '|     Risk factor: HIGH', cls: 'r', delay: 150 },
+      { t: '|       A critical remote code execution vulnerability exists in Microsoft SMBv1', cls: 'r', delay: 100 },
+      { t: '|       servers (ms17-010).', cls: 'r', delay: 100 },
+      { t: '|     Disclosure date: 2017-03-14', cls: 'd', delay: 100 },
+      { t: '|     References:', cls: 'd', delay: 100 },
+      { t: '|       https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-0143', cls: 'd', delay: 100 },
+      { t: '|_      https://technet.microsoft.com/en-us/library/security/ms17-010.aspx', cls: 'd', delay: 100 },
+      { t: '', delay: 200 },
+      { t: 'Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows', delay: jitter(400, 100) },
+      { t: '', delay: 150 },
+      { t: () => 'Nmap done: 1 IP address (1 host up) scanned in ' + (28.4 + Math.random() * 3).toFixed(2) + ' seconds', cls: 'g', delay: jitter(700, 150) },
     ],
+    lines: [],
   },
 
   // ── msfconsole ───────────────────────────────────────────────────────────────────────────
@@ -2992,9 +3009,21 @@ const HANDLERS = [
   // ── msf: use module ───────────────────────────────────────────────────────
   {
     id: 'msf-use',
-    match: c => /^use\s+/.test(c) && c.includes('ms17_010'),
+    match: c => SIM.msf && /^use\s+\S+/.test(c) && (
+      c.includes('ms17_010') ||
+      /^use\s+\d+$/.test(c.trim())
+    ),
     lines: [{ t: c => {
-      const mod = c.replace(/^use\s+/, '').trim();
+      let mod = c.replace(/^use\s+/, '').trim();
+      // `use <n>` — resolve from last search results
+      if (/^\d+$/.test(mod)) {
+        const idx = parseInt(mod, 10);
+        const resolved = SIM.msfLastSearch[idx];
+        if (!resolved) {
+          return { openMsf: true, msfEcho: `[-] Failed to load module: ${mod}` };
+        }
+        mod = resolved;
+      }
       SIM.msfModule = mod;
       SIM.msfOpts[mod] = SIM.msfOpts[mod] || {};
       // inherit global LHOST if not already set
@@ -3039,10 +3068,19 @@ const HANDLERS = [
     }}],
   },
 
+  // ── msf: run / exploit — missing RHOSTS ───────────────────────────────────
+  {
+    id: 'msf-run-no-rhosts',
+    match: c => (c === 'run' || c === 'exploit') && SIM.msf && SIM.msfModule && SIM.msfModule.includes('ms17_010') && !(SIM.msfOpts[SIM.msfModule]?.RHOSTS),
+    lines: [{ t: () => ({ openMsf: true, msfEcho:
+      `[-] Msf::OptionValidateError One or more options failed to validate: RHOSTS.`
+    })}],
+  },
+
   // ── msf: run / exploit ────────────────────────────────────────────────────
   {
     id: 'msf-run',
-    match: c => (c === 'run' || c === 'exploit') && SIM.msf && SIM.msfModule && SIM.msfModule.includes('ms17_010'),
+    match: c => (c === 'run' || c === 'exploit') && SIM.msf && SIM.msfModule && SIM.msfModule.includes('ms17_010') && !!(SIM.msfOpts[SIM.msfModule]?.RHOSTS),
     stepLines: [
       { t: '[*] Started reverse TCP handler on 10.10.20.5:4444',                          cls: 'b', delay: 0 },
       { t: '[*] 10.10.20.10:445 - Connecting to target for exploitation.',                 cls: 'b', delay: jitter(900, 200) },
@@ -3064,7 +3102,7 @@ const HANDLERS = [
       { t: '[*] 10.10.20.10:445 - Sending egg to corrupted connection.',                   cls: 'b', delay: jitter(400, 100) },
       { t: '[*] 10.10.20.10:445 - Triggering free of corrupted buffer.',                   cls: 'b', delay: jitter(500, 100) },
       { t: '[*] Sending stage (200774 bytes) to 10.10.20.10',                              cls: 'b', delay: jitter(1200, 300) },
-      { t: '[*] Meterpreter session 1 opened (10.10.20.5:4444 -> 10.10.20.10:49158)',      cls: 'g', delay: jitter(1000, 200) },
+      { t: '[*] Meterpreter session 1 opened (10.10.20.5:4444 -> 10.10.20.10:49158)',      cls: 'g', delay: jitter(7000, 800) },
       { t: '',                                                                               delay: 300 },
     ],
     lines: [],
@@ -3143,15 +3181,25 @@ const HANDLERS = [
   {
     match: c => /^search\s+/.test(c) && SIM.msf,
     lines: [{ t: c => {
-      const q = c.replace(/^search\s+/, '').trim();
+      const q = c.replace(/^search\s+/, '').trim().toLowerCase();
+      const hit = q.includes('17') || q.includes('eternal') || q.includes('smb') || q.includes('exploit');
+      if (hit) {
+        SIM.msfLastSearch = [
+          'exploit/windows/smb/ms17_010_eternalblue',
+          'exploit/windows/smb/ms17_010_psexec',
+        ];
+      } else {
+        SIM.msfLastSearch = [];
+      }
       return { openMsf: true, msfEcho:
         `Matching Modules\n` +
         `================\n\n` +
         `   #  Name                                      Disclosure Date  Rank    Check  Description\n` +
         `   -  ----                                      ---------------  ----    -----  -----------\n` +
-        (q.includes('17') || q.includes('eternal') || q.includes('smb')
+        (hit
           ? `   0  exploit/windows/smb/ms17_010_eternalblue  2017-03-14       great   Yes    MS17-010 EternalBlue SMB Remote Windows Kernel Pool Corruption\n` +
-            `   1  exploit/windows/smb/ms17_010_psexec       2017-03-14       normal  Yes    MS17-010 EternalRomance/EternalSynergy/EternalChampion SMB Remote Windows Code Execution`
+            `   1  exploit/windows/smb/ms17_010_psexec       2017-03-14       normal  Yes    MS17-010 EternalRomance/EternalSynergy/EternalChampion SMB Remote Windows Code Execution\n\n` +
+            `Interact with a module by name or index. For example \x1b[33minfo 0\x1b[0m, \x1b[33muse 0\x1b[0m or \x1b[33muse exploit/windows/smb/ms17_010_eternalblue\x1b[0m`
           : `   0  (no results for '${q}')`)
       };
     }}],

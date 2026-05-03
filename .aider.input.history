@@ -1,0 +1,117 @@
+
+# 2026-05-02 16:17:09.393906
++y
+
+# 2026-05-02 16:25:30.206921
++n
+
+# 2026-05-02 16:41:53.723203
++no
+
+# 2026-05-02 16:42:05.954430
++remove the entire kerberoasting lab and make this an eternalblue sim only
+
+# 2026-05-02 16:45:33.863728
++y
+
+# 2026-05-02 16:45:35.573798
++d
+
+# 2026-05-02 16:50:02.671433
++asdfasdf
+
+# 2026-05-02 16:51:04.893215
++the entire kerberoasting lab is still there. remove it so this is just an eternalblue sim
+
+# 2026-05-02 16:56:32.409039
++run it
+
+# 2026-05-02 16:58:15.969251
++exit
+
+# 2026-05-02 16:58:17.475801
++n
+
+# 2026-05-02 16:58:19.022062
++exit
+
+# 2026-05-02 16:58:34.117188
++n
+
+# 2026-05-02 16:59:02.708953
++/add kerberoast
+
+# 2026-05-02 16:59:06.638441
++n
+
+# 2026-05-02 17:06:36.988732
++/add WALKTHROUGH.md js/ctf.js js/terminal.js js/commands.js index.html
+
+# 2026-05-02 17:06:59.486526
++"Completely remove the Kerberoasting lab section from this project. Delete js/ctf.js if it's strictly for Kerberoasting. In index.html, js/commands.js, js/terminal.js, and WALKTHROUGH.md, remove all menu options, terminal commands, UI elements, and instructional steps related to Kerberoasting. Ensure the EternalBlue lab remains fully functional and is now the sole focus of the application."
+
+# 2026-05-02 17:11:22.780632
++y"Remove all references to Kerberoasting from the simulation. Specifically, delete the Kerberoast hashes from SIM.files and remove any mention of 'Kerberoast' or 'AS-REP' from the help menus and simulation logic. Keep all files and commands related to EternalBlue and the msfconsole state."
+
+# 2026-05-02 17:13:04.305556
++n
+
+# 2026-05-02 17:13:05.668775
++/drop WALKTHROUGH.md index.html js/terminal.js
+
+# 2026-05-02 17:13:08.356506
++y"Remove all references to Kerberoasting from the simulation. Specifically, delete the Kerberoast hashes from SIM.files and remove any mention of 'Kerberoast' or 'AS-REP' from the help menus and simulation logic. Keep all files and commands related to EternalBlue and the msfconsole state."
+
+# 2026-05-02 17:13:36.703128
++/clear
+
+# 2026-05-02 17:13:37.466829
++n
+
+# 2026-05-02 17:13:38.750239
++/clear
+
+# 2026-05-02 17:13:43.277470
++/add js/commands.js js/ctf.js
+
+# 2026-05-02 17:13:50.312898
++Remove all Kerberoasting logic and assets. Delete the service account hashes 
++from SIM.files and any 'GetUserSPNs' or 'AS-REP' references in the command 
++logic. Ensure the EternalBlue exploit and msfconsole state remain the 
++primary focus.
+
+# 2026-05-02 17:15:30.546338
++grep -n "GetUserSPNs" js/commands.js
++grep -n "SIM.files" js/ctf.js
+
+# 2026-05-02 17:16:27.616728
++/drop
+
+# 2026-05-02 17:16:32.149509
++/clear
+
+# 2026-05-02 17:16:37.583816
++grep -nE "GetUserSPNs|AS-REP|Kerberoast" js/commands.js
++grep -n "SIM.files" js/ctf.js
+
+# 2026-05-02 17:16:44.531772
++y
+
+# 2026-05-02 17:17:27.589138
++/drop js/ctf.js
+
+# 2026-05-02 17:18:06.722520
++remove anything related to the kerberoasting lab
+
+# 2026-05-02 17:18:30.889917
++/clear
++/drop
+
+# 2026-05-02 17:26:59.028993
++n
+
+# 2026-05-02 17:27:20.860773
++ok scan entire codebase and delete all logic and code related to the kerberoasting lab. this should only be an eternalblue lab
+
+# 2026-05-02 17:28:49.519281
++export OLLAMA_API_BASE=http://localhost:11434

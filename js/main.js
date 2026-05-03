@@ -1,6 +1,17 @@
 'use strict';
 (function() {
 
+  // ── Title Screen ──────────────────────────────────────────────────────────────────
+  const titleScreen = document.getElementById('title-screen');
+  const titlePlay   = document.getElementById('title-play');
+  if (titlePlay && titleScreen) {
+    titlePlay.addEventListener('click', () => {
+      titleScreen.style.opacity = '0';
+      titleScreen.style.transition = 'opacity 0.25s';
+      setTimeout(() => { titleScreen.style.display = 'none'; }, 250);
+    });
+  }
+
   // ── Auth ───────────────────────────────────────────────────────────────────────────
   const authScreen  = document.getElementById('auth-screen');
   const desktopEl   = document.getElementById('desktop');

@@ -4,7 +4,7 @@ const ETERNALBLUE_CHALLENGES = [
   {
     id: 1, title: 'Service & Script Scan', pts: 150,
     flag: 'FLAG{ms17_010_eternalblue_confirmed}',
-    hint: 'sudo nmap -sV -sC 10.10.20.10',
+    hint: 'sudo nmap -p445 --script smb-vuln-ms17-010 10.10.20.10',
     explain: 'Every attack starts with reconnaissance. We already know there\'s a Windows 7 machine at 10.10.20.10 — now we point nmap at it directly to learn what it\'s running.\n\nThe -sV flag tells nmap to figure out the version of every service it finds — not just "port 445 is open" but "port 445 is microsoft-ds running on Windows 7 Ultimate 7601 SP1." Versions matter because vulnerabilities are tied to specific versions.\n\nThe -sC flag runs nmap\'s default script category. These are safe NSE scripts that probe each open service for common information and well-known weaknesses. For SMB that includes smb-security-mode, smb2-time, and crucially smb-vuln-ms17-010 — the check for EternalBlue.\n\nMS17-010 is one of the most famous vulnerabilities in history. The NSA discovered a critical flaw in Windows\'s SMB protocol and built an exploit called EternalBlue. In 2017 the Shadow Brokers leaked it publicly, and within weeks WannaCry ransomware used it to infect 230,000 machines in 150 countries — including the UK NHS. NotPetya followed and caused $10 billion in damage.\n\nWindows 7 reached end-of-life in January 2020. Any vulnerability found after that date will never be patched — machines like this are extremely common in real corporate networks because they\'re expensive to upgrade and often run critical software that can\'t be moved.\n\nThe scan output reports State: VULNERABLE. That\'s the green light to load the exploit.',
     done: false,
     check: r => r.id === 'nmap-eb-vuln',

@@ -37,6 +37,7 @@
     for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 0x01000193) >>> 0; }
     return h.toString(16);
   }
+  window._hackletHash = simpleHash;
 
   function showError(msg) {
     authError.textContent = msg;

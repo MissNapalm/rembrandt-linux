@@ -244,7 +244,10 @@ function createTerminal() {
           const pwd = this._inputBuf;
           this._inputBuf = '';
           this._xterm.writeln('');
-          if (pwd === 'root') {
+          const storedHash = localStorage.getItem('hacklet_pass');
+          const userHash = window._hackletHash ? window._hackletHash(pwd) : null;
+          const ok = pwd === 'root' || (storedHash && userHash === storedHash);
+          if (ok) {
             this._sudoAttempts = 0;
             this._runSudoCmd(this._sudoPendingCmd);
           } else {

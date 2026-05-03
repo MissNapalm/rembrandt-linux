@@ -22,9 +22,11 @@
   const authUserEl  = document.getElementById('auth-username');
   const authRegFields = document.getElementById('auth-register-fields');
 
-  const storedUser = localStorage.getItem('hacklet_user');
-  const storedHash = localStorage.getItem('hacklet_pass');
-  const isFirstRun = !storedUser;
+  localStorage.removeItem('hacklet_user');
+  localStorage.removeItem('hacklet_pass');
+  const storedUser = null;
+  const storedHash = null;
+  const isFirstRun = true;
 
   if (isFirstRun) {
     authTitle.textContent = 'Create Account';

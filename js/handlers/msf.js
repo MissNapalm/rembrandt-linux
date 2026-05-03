@@ -128,8 +128,11 @@ HANDLERS.push(
     match: c => /^set\s+\S+\s+\S+/.test(c) && SIM.msf,
     lines: [{ t: c => {
       const parts = c.split(/\s+/);
-      const key = parts[1].toUpperCase();
+      let key = parts[1].toUpperCase();
       const val = parts.slice(2).join(' ');
+      // Real msfconsole aliases singular forms onto plural canonical names.
+      const ALIASES = { RHOST: 'RHOSTS', LHOSTS: 'LHOST' };
+      if (ALIASES[key]) key = ALIASES[key];
       const mod = SIM.msfModule || '__global__';
       if (!SIM.msfOpts[mod]) SIM.msfOpts[mod] = {};
       SIM.msfOpts[mod][key] = val;

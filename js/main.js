@@ -82,7 +82,7 @@
       if (!SIM.files[dest]) SIM.files[dest] = SIM.files[src] || '';
     }
     // Populate home subdirectory files
-    SIM.files[h + '/Desktop/README.txt']                    = `Welcome to RembrandtOS 2024.2\nThis is your Desktop folder.`;
+    SIM.files[h + '/Desktop/README.txt']                    = `Welcome to Rembrandt 2024.2\nThis is your Desktop folder.`;
     SIM.files[h + '/Documents/credentials.txt']             = `# Credentials found during engagement\n# DO NOT SHARE\njohn.doe : Password1!\nsvc_backup : Backup2023!`;
     SIM.files[h + '/Documents/network_notes.md']            = `# Network Notes\n## Targets\n- 10.10.10.10 - DC01.CORP.LOCAL (Domain Controller)\n- 10.10.10.5  - Rembrandt attack box\n\n## Open Ports (DC01)\n- 88  Kerberos\n- 389 LDAP\n- 445 SMB\n- 3268 Global Catalog`;
     SIM.files[h + '/Documents/reports/pentest_report_draft.md'] = `# Penetration Test Report - DRAFT\n## Executive Summary\nA full domain compromise was achieved via Kerberoasting.\n## Findings\n1. Weak service account passwords\n2. No account lockout on service accounts\n3. RC4 encryption allowed on Kerberos tickets`;

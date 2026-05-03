@@ -96,11 +96,20 @@
     SIM.files[h + '/.profile']                               = `# ~/.profile: executed by the command interpreter for login shells\nif [ -n "$BASH_VERSION" ]; then\n  if [ -f "$HOME/.bashrc" ]; then\n    . "$HOME/.bashrc"\n  fi\nfi\nif [ -d "$HOME/bin" ] ; then\n  PATH="$HOME/bin:$PATH"\nfi`;
     SIM.files[h + '/.zshrc']                                 = `# ~/.zshrc\nexport ZSH="$HOME/.oh-my-zsh"\nZSH_THEME="robbyrussell"\nplugins=(git)\nalias ll='ls -alF'\nalias grep='grep --color=auto'`;
     SIM.files[h + '/.msf4/history']                          = `use exploit/windows/smb/ms17_010_eternalblue\nset RHOSTS 10.10.10.10\nrun`;
-    // Update /etc/passwd and /etc/group with real username
-    SIM.files['/etc/passwd'] = `root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\n${user}:x:1000:1000:${user},,,:/home/${user}:/bin/bash`;
-    SIM.files['/etc/group']  = `root:x:0:\ndaemon:x:1:\nsudo:x:27:${user}\nadm:x:4:${user}\ncdrom:x:24:${user}\ndip:x:30:${user}\npluggdev:x:46:${user}\nnetdev:x:109:${user}\n${user}:x:1000:`;
-    SIM.files['/etc/shadow'] = `root:!:19736:0:99999:7:::\ndaemon:*:19736:0:99999:7:::\n${user}:$6$rounds=656000$randomsalt$hashedpassword:19736:0:99999:7:::`;
-    SIM.files['/etc/hostname'] = user === 'rembrandt' ? 'rembrandt' : user;
+    // Update /etc/passwd, /etc/group, /etc/shadow with the registered user.
+    // If the user picked "root" as their username, skip the unprivileged user
+    // line — real Linux can't have two roots, and it'd just look weird.
+    const sysPasswd = `root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin`;
+    SIM.files['/etc/passwd'] = user === 'root'
+      ? sysPasswd
+      : `${sysPasswd}\n${user}:x:1000:1000:${user},,,:/home/${user}:/bin/bash`;
+    SIM.files['/etc/group']  = user === 'root'
+      ? `root:x:0:\ndaemon:x:1:`
+      : `root:x:0:\ndaemon:x:1:\nsudo:x:27:${user}\nadm:x:4:${user}\ncdrom:x:24:${user}\ndip:x:30:${user}\npluggdev:x:46:${user}\nnetdev:x:109:${user}\n${user}:x:1000:`;
+    SIM.files['/etc/shadow'] = user === 'root'
+      ? `root:!:19736:0:99999:7:::\ndaemon:*:19736:0:99999:7:::`
+      : `root:!:19736:0:99999:7:::\ndaemon:*:19736:0:99999:7:::\n${user}:$6$rounds=656000$randomsalt$hashedpassword:19736:0:99999:7:::`;
+    SIM.files['/etc/hostname'] = 'rembrandt';
   }
 
   authSubmit.addEventListener('click', doAuth);

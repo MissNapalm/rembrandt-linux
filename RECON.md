@@ -7,10 +7,8 @@ session and you'll have a complete map of the environment in about 10 minutes.
 The lab simulates a small corporate network:
 
 - **10.10.10.5** — your attack box (Rembrandt Linux)
-- **10.10.10.10** — DC01.CORP.LOCAL — the Active Directory domain controller
-- **10.10.10.20** — Windows workstation
-- **10.10.10.50** — Linux web/file server
-- **10.10.10.10** — legacy Windows 7 box (the EternalBlue target)
+- **10.10.10.10** — DC01.CORP.LOCAL — Windows domain controller, also the EternalBlue target
+- **10.10.10.50** — LEGACY — unpatched Windows 7 Pro box
 
 Recon goes outward in layers: yourself, your box, your network, each host you
 find, and finally the services on those hosts.

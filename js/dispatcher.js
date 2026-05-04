@@ -788,7 +788,7 @@ function runCommand(rawInput) {
       return { id: h.id || null, lines, event, loadTime, progressFn: h.progressFn || null,
                progressOnEnter: h.progressOnEnter || false,
                liveDisplay: h.liveDisplay || false, displayFn: h.displayFn || null, refreshMs: h.refreshMs || 2000,
-               stepLines: h.stepLines ? h.stepLines.map(s => ({ ...s, t: typeof s.t === 'function' ? s.t(cmd) : s.t })) : null, after: h.stepLines ? h.after : null };
+               stepLines: h.stepLines ? h.stepLines.map(s => ({ ...s, t: typeof s.t === 'function' ? s.t(cmd) : s.t })) : null, after: h.stepLines && h.after ? () => h.after(cmd) : null };
     }
   }
 

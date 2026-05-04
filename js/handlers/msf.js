@@ -215,7 +215,7 @@ HANDLERS.push(
       { t: '[+] 10.10.10.10:445 - ETERNALBLUE overwrite completed successfully (0xC000000D)!', cls: 'g', delay: jitter(10, 5) },
       { t: '[*] 10.10.10.10:445 - Triggering free of corrupted buffer.',                   cls: 'b', delay: jitter(10, 5) },
       { t: '[*] Sending stage (200774 bytes) to 10.10.10.10',                              cls: 'b', delay: jitter(620, 200) },
-      { t: '[*] Meterpreter session 1 opened (10.10.10.5:4444 -> 10.10.10.10:49158)',      cls: 'g', delay: jitter(680, 220) },
+      { t: '[*] Meterpreter session 1 opened (10.10.10.5:4444 -> 10.10.10.10:49158)',      cls: 'g', delay: jitter(2200, 600) },
       { t: '',                                                                              delay: jitter(50, 20) },
     ],
     lines: [],

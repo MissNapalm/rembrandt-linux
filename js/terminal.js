@@ -29,6 +29,10 @@ function createTerminal() {
     _isRoot: false,
     _windowsShell: false,
     _winCwd: 'C:\\Windows\\system32',
+    _msf: false,
+    _msfModule: null,
+    _msfMeter: false,
+    _msfMeterWin: false,
 
     // push this tab's state into SIM before running a command
     _simPush() {
@@ -37,7 +41,10 @@ function createTerminal() {
       if (this._isRoot !== undefined) SIM.isRoot = this._isRoot;
       SIM.windowsShell = this._windowsShell;
       SIM.winCwd       = this._winCwd;
-      if (this._msfMeterWin !== undefined) SIM.msfMeterWin = this._msfMeterWin;
+      SIM.msf          = this._msf;
+      SIM.msfModule    = this._msfModule;
+      SIM.msfMeter     = this._msfMeter;
+      SIM.msfMeterWin  = this._msfMeterWin;
     },
     // pull SIM state back into this tab after a command
     _simPull() {
@@ -46,6 +53,9 @@ function createTerminal() {
       this._isRoot       = SIM.isRoot;
       this._windowsShell = SIM.windowsShell;
       this._winCwd       = SIM.winCwd;
+      this._msf          = SIM.msf;
+      this._msfModule    = SIM.msfModule;
+      this._msfMeter     = SIM.msfMeter;
       this._msfMeterWin  = SIM.msfMeterWin;
     },
 
@@ -155,7 +165,7 @@ function createTerminal() {
     _atomicClearAndPrompt() {
       // Build the full prompt string and write everything atomically in one call
       // so there is zero visible intermediate state between clear and prompt
-      const elevated = !!SIM.isRoot;
+      const elevated = !!this._isRoot;
       const user  = elevated ? 'root' : (this._user || SIM.user);
       const home  = elevated ? '/root' : '/home/' + user;
       const cwd   = (this._cwd || SIM.cwd) === home ? '~' : (this._cwd || SIM.cwd);
@@ -163,11 +173,11 @@ function createTerminal() {
       let prompt;
       if (this._windowsShell) {
         prompt = '\x1b[33m' + this._winCwd + '>\x1b[0m ';
-      } else if (SIM.msf) {
-        if (SIM.msfMeterWin) prompt = '\x1b[33mC:\\Windows\\system32>\x1b[0m ';
-        else if (SIM.msfMeter) prompt = '\x1b[1;31mmeterpreter\x1b[0m \x1b[31m>\x1b[0m ';
-        else if (SIM.msfModule) {
-          const short = SIM.msfModule.split('/').pop();
+      } else if (this._msf) {
+        if (this._msfMeterWin) prompt = '\x1b[33mC:\\Windows\\system32>\x1b[0m ';
+        else if (this._msfMeter) prompt = '\x1b[1;31mmeterpreter\x1b[0m \x1b[31m>\x1b[0m ';
+        else if (this._msfModule) {
+          const short = this._msfModule.split('/').pop();
           prompt = `\x1b[1;31mmsf6\x1b[0m \x1b[31mexploit\x1b[0m(\x1b[1;33m${short}\x1b[0m) \x1b[31m>\x1b[0m `;
         } else prompt = '\x1b[1;31mmsf6\x1b[0m \x1b[31m>\x1b[0m ';
       } else {
@@ -185,20 +195,20 @@ function createTerminal() {
         this._xterm.write('\x1b[33m' + this._winCwd + '>\x1b[0m ');
         return;
       }
-      if (SIM.msf) {
-        if (SIM.msfMeterWin) {
+      if (this._msf) {
+        if (this._msfMeterWin) {
           this._xterm.write('\x1b[33m' + (this._winCwd || SIM.winCwd) + '>\x1b[0m ');
-        } else if (SIM.msfMeter) {
+        } else if (this._msfMeter) {
           this._xterm.write('\x1b[1;31mmeterpreter\x1b[0m \x1b[31m>\x1b[0m ');
-        } else if (SIM.msfModule) {
-          const short = SIM.msfModule.split('/').pop();
+        } else if (this._msfModule) {
+          const short = this._msfModule.split('/').pop();
           this._xterm.write(`\x1b[1;31mmsf6\x1b[0m \x1b[31mexploit\x1b[0m(\x1b[1;33m${short}\x1b[0m) \x1b[31m>\x1b[0m `);
         } else {
           this._xterm.write('\x1b[1;31mmsf6\x1b[0m \x1b[31m>\x1b[0m ');
         }
         return;
       }
-      const elevated = !!SIM.isRoot;
+      const elevated = !!this._isRoot;
       const user  = elevated ? 'root' : (this._user || SIM.user);
       const home  = elevated ? '/root' : '/home/' + user;
       const cwd   = (this._cwd || SIM.cwd) === home ? '~' : (this._cwd || SIM.cwd);

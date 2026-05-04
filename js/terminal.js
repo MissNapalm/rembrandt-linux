@@ -1233,11 +1233,8 @@ function createTerminal() {
             }
           }, 1000);
         } else {
-          // Spinner for commands with no visible progress output
-          const frames = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
-          let i = 0;
-          this._xterm.write(frames[0]);
-          iv = setInterval(() => { this._xterm.write('\r' + frames[++i % frames.length]); }, 80);
+          // No progress output — just wait silently
+          iv = setInterval(() => {}, 999999);
         }
         this._loadCancel = () => finish(true);
         setTimeout(() => finish(false), ms);

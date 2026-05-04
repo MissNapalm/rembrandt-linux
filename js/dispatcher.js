@@ -629,7 +629,7 @@ function runCommand(rawInput) {
       return { openMsf: true, msfEcho: '[*] Shutting down Meterpreter...\n\n[*] 10.10.10.5 - Meterpreter session 1 closed.  Reason: User exit' };
     }
     // Valid meterpreter built-in commands
-    if (cmd === 'whoami' || cmd === 'getuid') {
+    if (cmd === 'getuid') {
       return { openMsf: true, msfEcho: 'Server username: NT AUTHORITY\\SYSTEM' };
     }
     if (cmd === 'pwd' || cmd === 'getwd') {
@@ -704,7 +704,7 @@ function runCommand(rawInput) {
       ].join('\n') };
     }
     // Block everything else that isn't a real meterpreter command
-    if (/^(cat|grep|nano|vim|bash|sh|find|echo|ss|netstat|arp|ip|uname|id|df|free|top|htop|history|type|cls)(\s|$)/.test(cmd)) {
+    if (/^(whoami|cat|grep|nano|vim|bash|sh|find|echo|ss|netstat|arp|ip|uname|id|df|free|top|htop|history|type|cls)(\s|$)/.test(cmd)) {
       return { lines: [{ t: `[-] Unknown command: ${cmd.split(' ')[0]}`, cls: 'r' }] };
     }
     // msfconsole-only verbs don't work in a meterpreter session

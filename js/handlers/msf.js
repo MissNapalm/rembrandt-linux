@@ -6,7 +6,7 @@ HANDLERS.push(
   // ── EternalBlue vuln scan ─────────────────────────────────────────────────
   {
     id: 'nmap-eb-vuln',
-    loadTime: () => jitter(17000, 1500),
+    loadTime: () => jitter(20000, 1500),
     progressOnEnter: true,
     progressFn: (elapsed, total) => {
       const pct = Math.min(99.99, elapsed / total * 100).toFixed(2);
@@ -496,34 +496,34 @@ HANDLERS.push(
           const src = m[1].replace(/^["']|["']$/g, '');
           const dst = m[2] ? m[2].replace(/^["']|["']$/g, '') : '/tmp/' + src.split(/[\\/]/).pop();
           return '[*] downloading: ' + src + ' -> ' + dst;
-        }, cls: 'b', delay: jitter(450, 150) },
+        }, cls: 'b', delay: jitter(180, 60) },
       { t: (cmd) => {
           const m = cmd.match(/^download\s+(\S+)/i);
           return '[*] Downloaded 4.00 MiB of 47.00 MiB (8.51%): ' + m[1].replace(/^["']|["']$/g, '');
-        }, delay: jitter(2200, 500) },
+        }, delay: jitter(550, 150) },
       { t: (cmd) => {
           const m = cmd.match(/^download\s+(\S+)/i);
           return '[*] Downloaded 12.00 MiB of 47.00 MiB (25.53%): ' + m[1].replace(/^["']|["']$/g, '');
-        }, delay: jitter(3400, 700) },
+        }, delay: jitter(800, 200) },
       { t: (cmd) => {
           const m = cmd.match(/^download\s+(\S+)/i);
           return '[*] Downloaded 24.00 MiB of 47.00 MiB (51.06%): ' + m[1].replace(/^["']|["']$/g, '');
-        }, delay: jitter(5200, 900) },
+        }, delay: jitter(1100, 250) },
       { t: (cmd) => {
           const m = cmd.match(/^download\s+(\S+)/i);
           return '[*] Downloaded 36.00 MiB of 47.00 MiB (76.60%): ' + m[1].replace(/^["']|["']$/g, '');
-        }, delay: jitter(5400, 900) },
+        }, delay: jitter(1100, 250) },
       { t: (cmd) => {
           const m = cmd.match(/^download\s+(\S+)/i);
           return '[*] Downloaded 47.00 MiB of 47.00 MiB (100.00%): ' + m[1].replace(/^["']|["']$/g, '');
-        }, delay: jitter(4800, 800) },
+        }, delay: jitter(900, 200) },
       { t: (cmd) => {
           const m = cmd.match(/^download\s+(\S+)(?:\s+(\S+))?/i);
           const src = m[1].replace(/^["']|["']$/g, '');
           const dst = m[2] ? m[2].replace(/^["']|["']$/g, '') : '/tmp/' + src.split(/[\\/]/).pop();
           return '[*] download   : ' + src + ' -> ' + dst;
-        }, cls: 'g', delay: jitter(280, 80) },
-      { t: '', delay: jitter(50, 20) },
+        }, cls: 'g', delay: jitter(150, 50) },
+      { t: '', delay: jitter(30, 10) },
     ],
     lines: [],
     after: (cmd) => {

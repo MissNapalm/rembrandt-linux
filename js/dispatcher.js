@@ -531,7 +531,7 @@ function runCommand(rawInput) {
         { t: '',                                                                                   delay: jitter(50, 20) },
       );
       SIM.lsassDumped = true;
-      return { stepLines };
+      return { id: 'win-lsass-dump', stepLines };
     }
 
     // ── rundll32 comsvcs.dll MiniDump (LOLBAS LSASS dump trick) ──────────────
@@ -544,7 +544,7 @@ function runCommand(rawInput) {
       }
       SIM.lsassDumped = true;
       // comsvcs.dll MiniDump prints nothing on success — it writes the file and exits silently.
-      return { stepLines: [
+      return { id: 'win-lsass-dump', stepLines: [
         { t: '', delay: jitter(2400, 800) },
       ]};
     }
@@ -559,7 +559,7 @@ function runCommand(rawInput) {
 
     // ── tasklist | findstr lsass (find PID before comsvcs trick) ─────────────
     if (/^tasklist\s.*lsass/i.test(cmd) || /tasklist.*\|\s*findstr.*lsass/i.test(cmd)) {
-      return { stepLines: [
+      return { id: 'win-tasklist-lsass', stepLines: [
         { t: 'lsass.exe                      460 Services                   0     11,236 K', cls: 'y', delay: jitter(120, 40) },
       ]};
     }
@@ -709,6 +709,11 @@ function runCommand(rawInput) {
     }
     // msfconsole-only verbs don't work in a meterpreter session
     if (/^(use|set|setg|unset|unsetg|show|search|back|info|sessions|jobs|banner|version|spool)(\s|$)/.test(cmd)) {
+      return { lines: [{ t: `[-] Unknown command: ${cmd.split(' ')[0]}`, cls: 'r' }] };
+    }
+    // Host-side / Windows-shell tools — must `shell` (Win) or `exit` to host (Linux) first.
+    // pypykatz parses dumps on the attacker box; procdump/rundll32/tasklist live in cmd.exe.
+    if (/^(pypykatz|procdump|rundll32|tasklist|reg)(\.exe)?(\s|$)/i.test(cmd)) {
       return { lines: [{ t: `[-] Unknown command: ${cmd.split(' ')[0]}`, cls: 'r' }] };
     }
   }

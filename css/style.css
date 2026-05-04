@@ -143,7 +143,14 @@ button { cursor: pointer; font-family: inherit; }
   z-index: 50; transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
 }
 #ctf-sidebar.collapsed { transform: translateX(100%); }
-#ctf-list { flex: 1; overflow-y: auto; }
+#ctf-list {
+  flex: 1; overflow-y: auto;
+  transition: transform 0.36s cubic-bezier(0.4,0,0.2,1), opacity 0.36s ease;
+}
+#ctf-list.phase-leaving       { transform: translateX(110%);  opacity: 0; }
+#ctf-list.phase-entering      { transform: translateX(-110%); opacity: 0; transition: none; }
+#ctf-list.phase-leaving-back  { transform: translateX(-110%); opacity: 0; }
+#ctf-list.phase-entering-back { transform: translateX(110%);  opacity: 0; transition: none; }
 #ctf-list::-webkit-scrollbar { width: 4px; }
 #ctf-list::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
 

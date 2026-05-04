@@ -515,6 +515,7 @@ HANDLERS.push(
   {
     id: 'pypykatz',
     loadTime: () => jitter(2400, 700),
+    progressOnEnter: true,        // print first line immediately, then idle until done
     match: c => {
       const m = c.match(/^pypykatz\s+lsa\s+minidump\s+(\S+)/i);
       if (!m) return false;

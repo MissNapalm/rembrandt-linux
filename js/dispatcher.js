@@ -707,6 +707,10 @@ function runCommand(rawInput) {
     if (/^(cat|grep|nano|vim|bash|sh|find|echo|ss|netstat|arp|ip|uname|id|df|free|top|htop|history|type|cls)(\s|$)/.test(cmd)) {
       return { lines: [{ t: `[-] Unknown command: ${cmd.split(' ')[0]}`, cls: 'r' }] };
     }
+    // msfconsole-only verbs don't work in a meterpreter session
+    if (/^(use|set|setg|unset|unsetg|show|search|back|info|sessions|jobs|banner|version|spool)(\s|$)/.test(cmd)) {
+      return { lines: [{ t: `[-] Unknown command: ${cmd.split(' ')[0]}`, cls: 'r' }] };
+    }
   }
 
   // ── Meterpreter Windows shell (shell command) ──────────────────────────────

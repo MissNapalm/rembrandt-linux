@@ -544,7 +544,22 @@ HANDLERS.push(
       const src = m ? m[1].replace(/^["']|["']$/g, '') : '';
       const dst = m && m[2] ? m[2].replace(/^["']|["']$/g, '') : '/tmp/' + (src.split(/[\\/]/).pop() || 'file');
       const srcLower = src.toLowerCase();
-      // SAM hive exfil
+      // lsass.dmp — only succeeds if procdump/comsvcs actually wrote it
+      if (srcLower.includes('lsass.dmp')) {
+        if (!SIM.lsassDumped) {
+          return { openMsf: true, msfEcho:
+            '[-] core_channel_open: Operation failed: The system cannot find the file specified.'
+          };
+        }
+        // Note: this branch is normally pre-empted by the animated msf-download-lsass handler
+        // above. It only fires here as a fallback if that handler somehow misses.
+        SIM.files[dst] = '[BINARY MINIDUMP — 47.0 MB]';
+        return { openMsf: true, msfEcho:
+          '[*] downloading: ' + src + ' -> ' + dst + '\n' +
+          '[*] download   : ' + src + ' -> ' + dst
+        };
+      }
+      // SAM hive exfil — requires the user to have run reg save
       if (srcLower.includes('sam.save') || srcLower.includes('system.save') || srcLower.includes('security.save')) {
         SIM.files[dst] = '[BINARY REGISTRY HIVE]';
         return { openMsf: true, msfEcho:

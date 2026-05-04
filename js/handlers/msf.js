@@ -6,7 +6,7 @@ HANDLERS.push(
   // ── EternalBlue vuln scan ─────────────────────────────────────────────────
   {
     id: 'nmap-eb-vuln',
-    loadTime: () => jitter(20000, 1500),
+    loadTime: () => jitter(24000, 1500),
     progressOnEnter: true,
     progressFn: (elapsed, total) => {
       const pct = Math.min(99.99, elapsed / total * 100).toFixed(2);

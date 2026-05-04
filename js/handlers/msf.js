@@ -202,21 +202,21 @@ HANDLERS.push(
     stepLines: [
       { t: '[*] Started reverse TCP handler on 10.10.10.5:4444',                          cls: 'b', delay: 0 },
 
-      { t: '[*] 10.10.10.10:445 - Using auxiliary/scanner/smb/smb_ms17_010 as check',      cls: 'b', delay: jitter(700, 300) },
-      { t: '[+] 10.10.10.10:445 - Host is likely VULNERABLE to MS17-010! - Windows 7 Ultimate 7601 Service Pack 1 x64 (64-bit)', cls: 'g', delay: jitter(15, 10) },
-      { t: '[*] 10.10.10.10:445 - Connecting to target for exploitation.',                 cls: 'b', delay: jitter(15, 10) },
-      { t: '[+] 10.10.10.10:445 - Connection established for exploitation.',               cls: 'g', delay: jitter(1100, 400) },
-      { t: '[+] 10.10.10.10:445 - Target OS selected valid for OS indicated by SMB reply', cls: 'g', delay: jitter(1300, 400) },
-      { t: '[*] 10.10.10.10:445 - Trying exploit with 12 Groom Allocations.',              cls: 'b', delay: jitter(15, 10) },
-      { t: '[*] 10.10.10.10:445 - Starting non-paged pool grooming',                       cls: 'b', delay: jitter(15, 10) },
-      { t: '[+] 10.10.10.10:445 - Sending SMBv2 buffers',                                  cls: 'g', delay: jitter(600, 200) },
-      { t: '[*] 10.10.10.10:445 - Sending final SMBv2 buffers.',                           cls: 'b', delay: jitter(800, 300) },
-      { t: '[*] 10.10.10.10:445 - Receiving response from exploit packet',                 cls: 'b', delay: jitter(1100, 400) },
-      { t: '[+] 10.10.10.10:445 - ETERNALBLUE overwrite completed successfully (0xC000000D)!', cls: 'g', delay: jitter(15, 10) },
-      { t: '[*] 10.10.10.10:445 - Triggering free of corrupted buffer.',                   cls: 'b', delay: jitter(700, 250) },
-      { t: '[*] Sending stage (200774 bytes) to 10.10.10.10',                              cls: 'b', delay: jitter(15, 10) },
-      { t: '[*] Meterpreter session 1 opened (10.10.10.5:4444 -> 10.10.10.10:49158)',      cls: 'g', delay: jitter(1900, 500) },
-      { t: '',                                                                              delay: jitter(80, 40) },
+      { t: '[*] 10.10.10.10:445 - Using auxiliary/scanner/smb/smb_ms17_010 as check',      cls: 'b', delay: jitter(280, 120) },
+      { t: '[+] 10.10.10.10:445 - Host is likely VULNERABLE to MS17-010! - Windows 7 Ultimate 7601 Service Pack 1 x64 (64-bit)', cls: 'g', delay: jitter(10, 5) },
+      { t: '[*] 10.10.10.10:445 - Connecting to target for exploitation.',                 cls: 'b', delay: jitter(10, 5) },
+      { t: '[+] 10.10.10.10:445 - Connection established for exploitation.',               cls: 'g', delay: jitter(420, 150) },
+      { t: '[+] 10.10.10.10:445 - Target OS selected valid for OS indicated by SMB reply', cls: 'g', delay: jitter(10, 5) },
+      { t: '[*] 10.10.10.10:445 - Trying exploit with 12 Groom Allocations.',              cls: 'b', delay: jitter(10, 5) },
+      { t: '[*] 10.10.10.10:445 - Starting non-paged pool grooming',                       cls: 'b', delay: jitter(10, 5) },
+      { t: '[+] 10.10.10.10:445 - Sending SMBv2 buffers',                                  cls: 'g', delay: jitter(220, 80) },
+      { t: '[*] 10.10.10.10:445 - Sending final SMBv2 buffers.',                           cls: 'b', delay: jitter(10, 5) },
+      { t: '[*] 10.10.10.10:445 - Receiving response from exploit packet',                 cls: 'b', delay: jitter(380, 130) },
+      { t: '[+] 10.10.10.10:445 - ETERNALBLUE overwrite completed successfully (0xC000000D)!', cls: 'g', delay: jitter(10, 5) },
+      { t: '[*] 10.10.10.10:445 - Triggering free of corrupted buffer.',                   cls: 'b', delay: jitter(10, 5) },
+      { t: '[*] Sending stage (200774 bytes) to 10.10.10.10',                              cls: 'b', delay: jitter(620, 200) },
+      { t: '[*] Meterpreter session 1 opened (10.10.10.5:4444 -> 10.10.10.10:49158)',      cls: 'g', delay: jitter(680, 220) },
+      { t: '',                                                                              delay: jitter(50, 20) },
     ],
     lines: [],
     after: () => {
@@ -580,10 +580,19 @@ HANDLERS.push(
     }}],
   },
 
+  // ── msf: run persistence — already installed (refuse second run) ─────────
+  {
+    match: c => /^run\s+persistence\b/i.test(c) && SIM.msfMeter && !SIM.msfMeterWin && SIM.persistenceInstalled,
+    lines: [
+      { t: '[-] Persistence script already executed in this session.', cls: 'r' },
+      { t: '[-] Cleanup resource file: /root/.msf4/logs/persistence/WIN7-PC_20240115.4823/WIN7-PC_20240115.4823.rc', cls: 'd' },
+    ],
+  },
+
   // ── msf: run persistence — installs reverse-shell autorun ────────────────
   {
     id: 'msf-persistence',
-    match: c => /^run\s+persistence\b/i.test(c) && SIM.msfMeter && !SIM.msfMeterWin,
+    match: c => /^run\s+persistence\b/i.test(c) && SIM.msfMeter && !SIM.msfMeterWin && !SIM.persistenceInstalled,
     stepLines: (() => {
       // Random-looking 8-char filename, like the real script generates
       const rand = () => Array.from({length: 8}, () =>

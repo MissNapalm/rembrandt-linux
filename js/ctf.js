@@ -50,7 +50,7 @@ const ETERNALBLUE_CHALLENGES = [
     check: r => r.id === 'msf-getuid',
   },
   {
-    id: 7, title: 'Steal the passwords', pts: 300,
+    id: 7, title: 'Steal password hashes', pts: 300,
     flag: 'FLAG{sam_hashes_dumped}',
     hint: 'hashdump',
     explain: 'Windows keeps account passwords in a file called the SAM, scrambled into hashes (not plain text).\n\nNormally the SAM is locked while Windows is running. As SYSTEM, we can read it anyway.\n\nhashdump dumps every local hash. From there you can crack them offline with hashcat — or use them as-is to log into other machines (pass-the-hash). In real networks, the same admin password often unlocks hundreds of boxes.',

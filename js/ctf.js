@@ -198,7 +198,12 @@ const CTF = {
   },
 
   _pasteToTerminal(cmd) {
-    const inst = TERM_INSTANCES.find(t => !t._busy && !t._nano) || TERM_INSTANCES[TERM_INSTANCES.length - 1];
+    // Prefer the currently visible/active terminal pane so the paste lands where the user is looking
+    const activePane = document.querySelector('.term-pane.active');
+    const activeInst = activePane?._termInst;
+    const inst = (activeInst && !activeInst._nano)
+      ? activeInst
+      : (TERM_INSTANCES.find(t => !t._busy && !t._nano) || TERM_INSTANCES[TERM_INSTANCES.length - 1]);
     if (!inst) return;
     inst._setInput(cmd);
     inst.focus();

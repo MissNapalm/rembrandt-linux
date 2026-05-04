@@ -1067,10 +1067,14 @@ function createTerminal() {
       }
 
       if (result.loadTime) {
+        // For silent-progress commands (nmap), print the first line immediately before scanning
         if (result.progressOnEnter && result.lines && result.lines.length > 0) {
           const firstLine = result.lines[0];
           const t = typeof firstLine.t === 'function' ? firstLine.t() : firstLine.t;
-          if (t) this._writeLine(t, firstLine.cls || '');
+          if (t) {
+            const color = this._clsColor(firstLine.cls || '');
+            this._xterm.write((color ? color + t + '\x1b[0m' : t) + '\r\n');
+          }
           result._firstLinePrinted = true;
         }
         this._busy = true;
